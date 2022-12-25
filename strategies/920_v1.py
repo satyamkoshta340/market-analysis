@@ -3,7 +3,7 @@
 Created on Thu Dec 22 13:34:08 2022
 
 @author: kosht
-
+Backtesting 
 Data points requirement : 5min candle
 Looking for 9:15 candle high and low
 checking for break of five_min_high and five_min_low
@@ -15,6 +15,9 @@ termiate the trade forcefully after 11:00
 
 import pandas as pd
 import datetime as dt
+
+# need to provide 5 min datasets as dp 
+
 
 def analysisOf920(dp):
     signal_time = "09:15"

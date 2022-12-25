@@ -15,6 +15,9 @@ termiate the trade forcefully after 11:00
 
 import pandas as pd
 import datetime as dt
+import sys
+
+from Scripts.AnalysisReport import *
 
 # need to provide 5 min datasets as dp 
 
@@ -121,3 +124,12 @@ def analysisOf920(dp):
         result["Trade"].append(trade)
         result["Gain"].append(g)
     return result
+
+def main():
+    print(sys.path)
+    dp = pd.read_csv( sys.path[0] +"/assets/BANK_NIFTY_5_MIN_2020.csv")
+    result = analysisOf920(dp)
+    result = pd.DataFrame(result)
+    getAnalysisReport(result)
+
+main()

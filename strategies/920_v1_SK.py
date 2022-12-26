@@ -15,7 +15,7 @@ termiate the trade forcefully after 11:00
 
 import pandas as pd
 import datetime as dt
-import sys
+import sys, os
 
 from Scripts.AnalysisReport import *
 
@@ -126,8 +126,12 @@ def analysisOf920(dp):
     return result
 
 def main():
-    print(sys.path)
-    dp = pd.read_csv( sys.path[0] +"/assets/BANK_NIFTY_5_MIN_2020.csv")
+    print (os.getcwd())
+    try:
+        dp = pd.read_csv( os.getcwd()+"/strategies/assets/BANK_NIFTY_5_MIN_2020.csv")
+    except:
+        dp = pd.read_csv( os.getcwd()+"\\assets\\BANK_NIFTY_5_MIN_2020.csv")
+
     result = analysisOf920(dp)
     result = pd.DataFrame(result)
     getAnalysisReport(result)

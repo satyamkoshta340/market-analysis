@@ -153,3 +153,26 @@ class KiteApp:
                                        data={"parent_order_id": parent_order_id} if parent_order_id else {},
                                        headers=self.headers).json()["data"]["order_id"]
         return order_id
+'''
+    def place_gtt(self, trigger_type, tradingsymbol, exchange, trigger_values, last_price, orders):
+    """
+    Place GTT order
+    - `trigger_type` The type of GTT order(single/two-leg).
+    - `tradingsymbol` Trading symbol of the instrument.
+    - `exchange` Name of the exchange.
+    - `trigger_values` Trigger values (json array).
+    - `last_price` Last price of the instrument at the time of order placement.
+    - `orders` JSON order array containing following fields
+        - `transaction_type` BUY or SELL
+        - `quantity` Quantity to transact
+        - `price` The min or max price to execute the order at (for LIMIT orders)
+    """
+    # Validations.
+    assert trigger_type in [self.GTT_TYPE_OCO, self.GTT_TYPE_SINGLE]
+    condition, gtt_orders = self._get_gtt_payload(trigger_type, tradingsymbol, exchange, trigger_values, last_price, orders)
+    return self._post("gtt.place", params={
+        "condition": json.dumps(condition),
+        "orders": json.dumps(gtt_orders),
+        "type": trigger_type})
+
+'''

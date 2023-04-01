@@ -53,16 +53,152 @@ for k in range(0,len(stk)):
 
 		            if min(dt["low"][i+1:i+5]) >= (first_15m_high - rsfr):
 		            	# print ("Condition to place buy order")
-		            	filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high))
+		            	if pct_candle <= 1.5:
+			            	filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high))
 		            if max(dt["high"][i+1:i+5]) <= (first_15m_low + rsfr):
 		            	# print ("Condition satisfied to place sell order")
-		            	filtered_scan2.append((pct_candle, stk["EQ"][k], first_15m_low))
+		            	if pct_candle <= 1.5:
+			            	filtered_scan2.append((pct_candle, stk["EQ"][k], first_15m_low))
+
+filtered_scan1 = sorted(filtered_scan1)
+filtered_scan2 = sorted(filtered_scan2)
 
 print ("Total stocks found", len(scanned))
-print ("Stocks with FR",len(filtered_scan1), sorted(filtered_scan1))
+print ("Stocks to Buy",len(filtered_scan1), filtered_scan1)
+print ("Stocks for Sell",len(filtered_scan2), filtered_scan2)
 
 # Next task
 # place buy order for top 3 filtered_scan1 stocks - SL .6% below the entry and Target .7% above the entry
 
+# ============================== Placing buy orders ================================== #
+# Defining parameters
+iniCap = 2000
+# Placing order for top 1 stock
+if len(filtered_scan1) >= 1:
+	stk_no = 0
+	tsb = filtered_scan1[stk_no][1]
+	entry_price = round((filtered_scan1[stk_no][2] + filtered_scan1[stk_no][2]*0.0001),1)
+	qty = int(5*iniCap/entry_price)
+	print ("Placing 1st buying order for", tsb, "at", entry_price)
+	order = kite.place_order(variety=kite.VARIETY_AMO,
+	                         exchange=kite.EXCHANGE_NSE,
+	                         tradingsymbol=tsb,
+	                         transaction_type=kite.TRANSACTION_TYPE_BUY,
+	                         quantity=qty,
+	                         product=kite.PRODUCT_MIS,
+	                         order_type=kite.ORDER_TYPE_LIMIT,
+	                         price=entry_price,
+	                         validity=None,
+	                         disclosed_quantity=None,
+	                         trigger_price=None,
+	                         squareoff=None,
+	                         stoploss=None,
+	                         trailing_stoploss=None,
+	                         tag="TradeViaPython")
+	print (order)
 
+	# Placing order for 2nd stock
+	try:
+		stk_no = 1
+		tsb = filtered_scan1[stk_no][1]
+		entry_price = round((filtered_scan1[stk_no][2] + filtered_scan1[stk_no][2]*0.0001),1)
+		qty = int(5*iniCap/entry_price)
+		print ("Placing 2nd buying order for", tsb, "at", entry_price)
+		order = kite.place_order(variety=kite.VARIETY_AMO,
+		                         exchange=kite.EXCHANGE_NSE,
+		                         tradingsymbol=tsb,
+		                         transaction_type=kite.TRANSACTION_TYPE_BUY,
+		                         quantity=qty,
+		                         product=kite.PRODUCT_MIS,
+		                         order_type=kite.ORDER_TYPE_LIMIT,
+		                         price=entry_price,
+		                         validity=None,
+		                         disclosed_quantity=None,
+		                         trigger_price=None,
+		                         squareoff=None,
+		                         stoploss=None,
+		                         trailing_stoploss=None,
+		                         tag="TradeViaPython")
+		print (order)
+	except:
+		print("only 1 stock matched pattern for buying")
 
+	# Placing buy order for 3rd stock
+	try:
+		stk_no = 2
+		entry_price = round((filtered_scan1[stk_no][2] + filtered_scan1[stk_no][2]*0.0001),1)
+		tsb = filtered_scan1[stk_no][1]
+		qty = int(5*iniCap/entry_price)
+		print ("Placing 3rd buying order for", tsb, "at", entry_price)
+		order = kite.place_order(variety=kite.VARIETY_AMO,
+		                         exchange=kite.EXCHANGE_NSE,
+		                         tradingsymbol=tsb,
+		                         transaction_type=kite.TRANSACTION_TYPE_BUY,
+		                         quantity=qty,
+		                         product=kite.PRODUCT_MIS,
+		                         order_type=kite.ORDER_TYPE_LIMIT,
+		                         price=entry_price,
+		                         validity=None,
+		                         disclosed_quantity=None,
+		                         trigger_price=None,
+		                         squareoff=None,
+		                         stoploss=None,
+		                         trailing_stoploss=None,
+		                         tag="TradeViaPython")
+		print (order)
+	except:
+		print ("Only 2 stocks found for buying")
+else:
+	print ("Could not find a single stock with the pattern")
+
+# ============================== Placing sell orders ================================== #
+# 1st Sell order
+flag = "Sell"
+if len(filtered_scan2) >= 1 :
+	stk_no = 0
+	tsb = filtered_scan2[stk_no][1]
+	entry_price = round((filtered_scan2[stk_no][2] - filtered_scan2[stk_no][2]*0.0001),1)
+	qty = int(5*iniCap/entry_price)
+	print ("Placing 1st sell order for", tsb, "at", entry_price)
+	order = kite.place_order(variety=kite.VARIETY_AMO,
+	                         exchange=kite.EXCHANGE_NSE,
+	                         tradingsymbol=tsb,
+	                         transaction_type=kite.TRANSACTION_TYPE_SELL,
+	                         quantity=qty,
+	                         product=kite.PRODUCT_MIS,
+	                         order_type=kite.ORDER_TYPE_LIMIT,
+	                         price=entry_price,
+	                         validity=None,
+	                         disclosed_quantity=None,
+	                         trigger_price=None,
+	                         squareoff=None,
+	                         stoploss=None,
+	                         trailing_stoploss=None,
+	                         tag="TradeViaPython")
+	print (order)
+
+	# Placing order for 2nd stock
+	try:
+		stk_no = 1
+		tsb = filtered_scan2[stk_no][1]
+		entry_price = round((filtered_scan2[stk_no][2] - filtered_scan2[stk_no][2]*0.0001),1)
+		qty = int(5*iniCap/entry_price)
+		print ("Placing 2nd sell order for", tsb, "at", entry_price)
+		order = kite.place_order(variety=kite.VARIETY_AMO,
+		                         exchange=kite.EXCHANGE_NSE,
+		                         tradingsymbol=tsb,
+		                         transaction_type=kite.TRANSACTION_TYPE_SELL,
+		                         quantity=qty,
+		                         product=kite.PRODUCT_MIS,
+		                         order_type=kite.ORDER_TYPE_LIMIT,
+		                         price=entry_price,
+		                         validity=None,
+		                         disclosed_quantity=None,
+		                         trigger_price=None,
+		                         squareoff=None,
+		                         stoploss=None,
+		                         trailing_stoploss=None,
+		                         tag="TradeViaPython")
+		print (order)
+	except:
+		print("only 1 stock matched pattern for buying")

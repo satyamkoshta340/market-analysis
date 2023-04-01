@@ -8,7 +8,7 @@ kite = KiteApp(enctoken=enctoken)
 import datetime
 stk = pd.read_csv("itkn.csv")
 scanned = []
-filtered_scan1 = []
+filtered_scan1 = []; filtered_scan2 = []
 
 ptf = 0
 
@@ -51,9 +51,18 @@ for k in range(0,len(stk)):
 		            scanned.append((pct_candle, stk["EQ"][k]))
 		            # print (first_15m_high,rsfr, first_15m_low, min(dt["low"][i+1:i+5]), first_15m_high- rsfr )
 
-		            if min(dt["low"][i+1:i+5]) >= (first_15m_high - rsfr) or max(dt["high"][i+1:i+5]) <= (first_15m_low + rsfr):
-		            	filtered_scan1.append((pct_candle, stk["EQ"][k]))
+		            if min(dt["low"][i+1:i+5]) >= (first_15m_high - rsfr):
+		            	# print ("Condition to place buy order")
+		            	filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high))
+		            if max(dt["high"][i+1:i+5]) <= (first_15m_low + rsfr):
+		            	# print ("Condition satisfied to place sell order")
+		            	filtered_scan2.append((pct_candle, stk["EQ"][k], first_15m_low))
 
 print ("Total stocks found", len(scanned))
 print ("Stocks with FR",len(filtered_scan1), sorted(filtered_scan1))
+
+# Next task
+# place buy order for top 3 filtered_scan1 stocks - SL .6% below the entry and Target .7% above the entry
+
+
 

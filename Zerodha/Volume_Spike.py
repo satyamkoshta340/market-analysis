@@ -2,16 +2,21 @@ from kite_trade import *
 import pandas as pd
 import time
 from Bourses import *
-# Run this file on every market trading day at 10:45:10 to get the orders placed
-enctoken = "QbDYrLZ6MSaW75wroj8zMFO2JoD59Fs8mKOv9yYDW5zPxEQXtgoU4pLbek8m+6X8WrNqJsKJQPtaivc7u9nzw03dDtAEZDxCm9Y7V7rH7Fbb97ZQ5+uQvA=="
+from dotenv import load_dotenv
+load_dotenv()
+
+enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
+
+# Get Historical Data
+dir_path = os.path.dirname(os.path.realpath(__file__))
+stk = pd.read_csv( dir_path+ "/itkn.csv")
 
 # Capital to be deployed per stock
 iniCap = 2000   # placing order for 5 stocks
 
 # Get Historical Data
 import datetime
-stk = pd.read_csv("itkn.csv")
 scanned = []
 filtered_scan1 = []; filtered_scan2 = []
 

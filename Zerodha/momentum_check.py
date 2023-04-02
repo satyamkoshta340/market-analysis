@@ -1,9 +1,9 @@
 from kite_trade import *
 import pandas as pd
 import os
-from dotenv import load_dotenv
 import datetime
 
+from dotenv import load_dotenv
 load_dotenv()
 
 enctoken = os.environ.get("ENC_TOKEN")
@@ -18,7 +18,7 @@ for k in range(0, len(stk)):
     # if stk["itkn"][k] != 225537: continue
     # getting historical data
     instrument_token = stk["itkn"][k]    # DRREDDY 225537
-    from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days
+    from_datetime = datetime.datetime.now() - datetime.timedelta(days=3)     # From last & days
     to_datetime = datetime.datetime.now()
     interval = "5minute"
     nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)

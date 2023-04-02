@@ -1,8 +1,12 @@
 from kite_trade import *
 import pandas as pd
-
-enctoken = "f6grC2p4MI1UjGxYV++4dMCu82eT35PllRhPkl9dsz010HXo1GAB/t0gCt2q/ArvncbGNQoSFNUTAoAzbIsD/gcS6MgmjRyjw1t3U00SAUX5bXsjfsuwBQ=="
+import time
+# Run this file on every market trading day at 10:45:10 to get the orders placed
+enctoken = "QbDYrLZ6MSaW75wroj8zMFO2JoD59Fs8mKOv9yYDW5zPxEQXtgoU4pLbek8m+6X8WrNqJsKJQPtaivc7u9nzw03dDtAEZDxCm9Y7V7rH7Fbb97ZQ5+uQvA=="
 kite = KiteApp(enctoken=enctoken)
+
+# Capital to be deployed per stock
+iniCap = 2000   # placing order for 5 stocks
 
 # Get Historical Data
 import datetime
@@ -10,15 +14,17 @@ stk = pd.read_csv("itkn.csv")
 scanned = []
 filtered_scan1 = []; filtered_scan2 = []
 
-ptf = 0
+ptf = 0   # pattern found in #stocks
 
 # Lopping through the list of FNO stocks (having high volumes)
 for k in range(0,len(stk)):
 	# if stk["itkn"][k] != 225537: continue
 	# getting historical data
 	instrument_token = stk["itkn"][k]    # DRREDDY 225537
-	from_datetime = datetime.datetime.now() - datetime.timedelta(days=2)     # From last & days
-	to_datetime = datetime.datetime.now()
+	# from_datetime = datetime.datetime.now() - datetime.timedelta(days=3)     # From last & days
+	# to_datetime = datetime.datetime.now()
+	from_datetime = datetime.datetime(2023, 3, 26, 8, 00, 00, 000000)
+	to_datetime = datetime.datetime(2023, 3, 27, 18, 00, 00, 000000)
 	interval = "15minute"
 	nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
 	# print(kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False))
@@ -63,16 +69,23 @@ for k in range(0,len(stk)):
 filtered_scan1 = sorted(filtered_scan1)
 filtered_scan2 = sorted(filtered_scan2)
 
-print ("Total stocks found", len(scanned))
+
+print ("Total stocks found", len(scanned), scanned)
 print ("Stocks to Buy",len(filtered_scan1), filtered_scan1)
 print ("Stocks for Sell",len(filtered_scan2), filtered_scan2)
+
+print ("\nData fetched for", str(dt["date"][i]).split()[0], "placing orders...\n" )
+ft = 0
+while ft <30:
+	ft = ft+5
+	time.sleep(5)
+	print ("Time remaining to cancel the order...", 30-ft)
+	print ("... Press ctrl+Insert+Fn to break" )
 
 # Next task
 # place buy order for top 3 filtered_scan1 stocks - SL .6% below the entry and Target .7% above the entry
 
 # ============================== Placing buy orders ================================== #
-# Defining parameters
-iniCap = 2000
 # Placing order for top 1 stock
 if len(filtered_scan1) >= 1:
 	stk_no = 0
@@ -186,7 +199,6 @@ if len(filtered_scan2) >= 1 :
 		print ("Placing 2nd sell order for", tsb, "at", entry_price)
 		order = kite.place_order(variety=kite.VARIETY_AMO,
 		                         exchange=kite.EXCHANGE_NSE,
-		                         tradingsymbol=tsb,
 		                         transaction_type=kite.TRANSACTION_TYPE_SELL,
 		                         quantity=qty,
 		                         product=kite.PRODUCT_MIS,
@@ -201,4 +213,4 @@ if len(filtered_scan2) >= 1 :
 		                         tag="TradeViaPython")
 		print (order)
 	except:
-		print("only 1 stock matched pattern for buying")
+		print("only 1 stock matched pattern for selling")

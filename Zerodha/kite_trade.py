@@ -55,6 +55,7 @@ class KiteApp:
     # Validity
     VALIDITY_DAY = "DAY"
     VALIDITY_IOC = "IOC"
+    VALIDITY_IOC = "TTL"
 
     # Exchanges
     EXCHANGE_NSE = "NSE"

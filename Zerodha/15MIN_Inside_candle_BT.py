@@ -1,16 +1,12 @@
 from kite_trade import *
 import pandas as pd
-<<<<<<< HEAD
 import time
 # Run this file on every market trading day at 10:45:10 to get the orders placed
-enctoken = "QbDYrLZ6MSaW75wroj8zMFO2JoD59Fs8mKOv9yYDW5zPxEQXtgoU4pLbek8m+6X8WrNqJsKJQPtaivc7u9nzw03dDtAEZDxCm9Y7V7rH7Fbb97ZQ5+uQvA=="
-=======
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
 enctoken = os.environ.get("ENC_TOKEN")
->>>>>>> 2c4807fb4900eef3cc6947b089645694f53fd6ab
 kite = KiteApp(enctoken=enctoken)
 
 # Capital to be deployed per stock

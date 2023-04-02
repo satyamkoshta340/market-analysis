@@ -154,6 +154,32 @@ class KiteApp:
                                        data={"parent_order_id": parent_order_id} if parent_order_id else {},
                                        headers=self.headers).json()["data"]["order_id"]
         return order_id
+    
+    def place_gtt(self, exchange, tradingsymbol, trigger_values, last_price, orders, trigger_type):
+        params = {}
+        params["orders"] = orders
+        params["type"] = trigger_type
+        params["condition"] = {
+            "exchange": exchange,
+            "tradingsymbol": tradingsymbol,
+            "trigger_values": trigger_values,
+            "last_price": last_price
+        }
+
+        trigger_id = self.session.post(f"{self.root_url}/gtt/triggers", 
+                                    data = params, headers=self.headers).json()["data"]["trigger_id"]
+        return trigger_id
+    """
+        orders = [{
+            "exchange" : exchange,
+            "tradingsymbol": tradingsymbol,
+            "transaction_type": transaction_type,
+            "quantity": quantity,
+            "order_type": order_type,
+            "product": product,
+            "price": price
+    }]"""
+    
 '''
     def place_gtt(self, trigger_type, tradingsymbol, exchange, trigger_values, last_price, orders):
     """

@@ -146,5 +146,4 @@ def DMA(DF,n):
         elif i >= n:
             sma.append(df['close'].rolling(n).mean().tolist()[n])
     df['DMA']=np.array(sma)
-    return df['DMA']
-
+    return df

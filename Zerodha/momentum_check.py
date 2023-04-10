@@ -18,7 +18,7 @@ for k in range(0, len(stk)):
     # if stk["itkn"][k] != 225537: continue
     # getting historical data
     instrument_token = stk["itkn"][k]    # DRREDDY 225537
-    from_datetime = datetime.datetime.now() - datetime.timedelta(days=3)     # From last & days
+    from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days
     to_datetime = datetime.datetime.now()
     interval = "5minute"
     nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
@@ -36,6 +36,8 @@ for k in range(0, len(stk)):
     last_candle_type = "red" if dt["open"][0] > dt["close"][0] else "green"
 
     for i in range(1, len(dt["date"])):
+        if dt["close"][i] < 50 or dt["close"][i]>3000:
+            continue
         candle_type = "red" if dt["open"][i] > dt["close"][i] else "green"
         candle_size = abs(dt["open"][i] - dt["close"][i])
         if candle_type == last_candle_type and candle_size > last_candle_size:
@@ -55,4 +57,6 @@ for k in range(0, len(stk)):
                 print("momentum found in the BULLs for stock "+ stk["EQ"][k] + " at " + str(dt["date"][i]))
             break
             
+
+
     

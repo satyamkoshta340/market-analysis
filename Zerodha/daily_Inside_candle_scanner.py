@@ -8,9 +8,8 @@ load_dotenv()
 
 enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
-print("Starting", kite.positions())
+# print("Starting", kite.positions())
 # Capital to be deployed per stock
-iniCap = 2000   # placing order for 5 stocks
 
 # Get Historical Data
 import datetime
@@ -30,8 +29,8 @@ for k in range(0,len(stk)):
 	# from_datetime = datetime.datetime.now() - datetime.timedelta(days=30)     # From last & days
 	# to_datetime = datetime.datetime.now()
 
-	to_datetime = datetime.datetime(2023, 4, 6, 18, 00, 00, 000000)
-	from_datetime = to_datetime - datetime.timedelta(days=30)     # From last & days
+	to_datetime = datetime.datetime(2023, 4, 10, 18, 00, 00, 000000)
+	from_datetime = to_datetime - datetime.timedelta(days=60)     # From last & days
 
 	interval = "day"
 	nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
@@ -44,10 +43,15 @@ for k in range(0,len(stk)):
 	if dt["volume"][0] < 100000 or dt["close"][0] < 24:
 		continue
 	dt = DMA(dt,9)
+	dt = ema_Vol(dt,14)
 	# print (dt.tail())
 	# Finding the inside candle pattern in today's stocks
 	# for i in range(0,len(dt["date"])):
 	i = len(dt)-2
+
+	#Filtering stocks with low volume
+	if dt["volume"][i] < dt["EMA_volume"][i]*1.25:
+		continue
 	try:
 		first_15m_high = dt["high"][i]
 		first_15m_low = dt["low"][i]

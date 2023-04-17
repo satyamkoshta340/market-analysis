@@ -19,7 +19,7 @@ scanned = []
 filtered_scan1 = []; filtered_scan2 = []
 erred = []
 ptf = 0   # pattern found in #stocks
-
+noc = 3   #number of candles
 # Lopping through the list of FNO stocks (having high volumes)
 # for k in range(0,100):
 for k in range(0,len(stk)):
@@ -29,7 +29,7 @@ for k in range(0,len(stk)):
 	# from_datetime = datetime.datetime.now() - datetime.timedelta(days=30)     # From last & days
 	# to_datetime = datetime.datetime.now()
 
-	to_datetime = datetime.datetime(2023, 4, 10, 18, 00, 00, 000000)
+	to_datetime = datetime.datetime(2023, 4, 6, 18, 00, 00, 000000)
 	from_datetime = to_datetime - datetime.timedelta(days=60)     # From last & days
 
 	interval = "day"
@@ -57,23 +57,23 @@ for k in range(0,len(stk)):
 		first_15m_low = dt["low"][i]
 		first_candle_size = first_15m_high - first_15m_low
 		pct_candle = round(100*first_candle_size/first_15m_high,2)
-		rsfr = first_candle_size*.62  			# Fibonacci retracement value for filtering proper stocks
-		if first_15m_high > max(dt["high"][i+1:i+2]) and first_15m_low < min(dt["low"][i+1:i+2]):
+		rsfr = first_candle_size*.72  			# Fibonacci retracement value for filtering proper stocks
+		if first_15m_high > max(dt["high"][i+1:i+1+noc]) and first_15m_low < min(dt["low"][i+1:i+1+noc]):
 			scanned.append((pct_candle, stk["EQ"][k]))
-			# print (first_15m_high,rsfr, first_15m_low, min(dt["low"][i+1:i+2]), first_15m_high- rsfr )
+			# print (first_15m_high,rsfr, first_15m_low, min(dt["low"][i+1:i+1+noc]), first_15m_high- rsfr )
 
-			if min(dt["low"][i+1:i+2]) >= (first_15m_high - rsfr):
-				# print ("Scanning", stk["EQ"][k],dt["date"][i], first_15m_high, max(dt["high"][i+1:i+2]) ,first_15m_low,min(dt["low"][i+1:i+2]))
-				# print(min(dt["low"][i+1:i+2]), first_15m_high - rsfr)
+			if min(dt["low"][i+1:i+1+noc]) >= (first_15m_high - rsfr):
+				# print ("Scanning", stk["EQ"][k],dt["date"][i], first_15m_high, max(dt["high"][i+1:i+1+noc]) ,first_15m_low,min(dt["low"][i+1:i+1+noc]))
+				# print(min(dt["low"][i+1:i+1+noc]), first_15m_high - rsfr)
 				# break
 				if dt["close"][i] >= dt["DMA"][i]:
 					print ("Condition satisfied to place buy order", stk["EQ"][k], dt["close"][i], dt["volume"][i], dt["date"][i+1])
 					# if pct_candle <= 1.5:
 					filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high))
-			if max(dt["high"][i+1:i+2]) <= (first_15m_low + rsfr):
+			if max(dt["high"][i+1:i+1+noc]) <= (first_15m_low + rsfr):
 				if dt["close"][i] <= dt["DMA"][i]:
-					# print ("Scanning", stk["EQ"][k],dt["date"][i], first_15m_high, max(dt["high"][i+1:i+2]) ,first_15m_low,min(dt["low"][i+1:i+2]))
-					# print(min(dt["low"][i+1:i+2]), first_15m_high - rsfr)
+					# print ("Scanning", stk["EQ"][k],dt["date"][i], first_15m_high, max(dt["high"][i+1:i+1+noc]) ,first_15m_low,min(dt["low"][i+1:i+1+noc]))
+					# print(min(dt["low"][i+1:i+1+noc]), first_15m_high - rsfr)
 					# print ("Condition satisfied to place sell order", stk["EQ"][k], dt["close"][i], dt["volume"][i],dt["date"][i+1])
 					# print (dt.tail(2))
 					# if pct_candle <= 1.5:

@@ -18,7 +18,7 @@ kite = KiteApp(enctoken=enctoken)
 # instrument_token = 256265    # NIFTY 50
 instrument_token = 260105    # NIFTY BANK
 # time.sleep(78*60)
-dy= 1200
+dy= 120
 tradingSessions = 0
 buySignals = 0
 sellSignals = 0
@@ -94,10 +94,10 @@ while dy > 1:
             sellSignals += 1
             ci=5+di
             for i in range(ci,len(dt)):
-                if dt["low"][i] < buy_entry_price - 22:
+                if dt["low"][i] < sell_entry_price - 22:
                     print ("Got selling position")
                     sellPositions += 1
-                    if dt["low"][i] < buy_entry_price - 100:
+                    if dt["low"][i] < sell_entry_price - 100:
                         # print ("Profitable sell")
                         pSell+=1
                         break

@@ -11,7 +11,7 @@ enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
 # print("Starting", kite.margins(), "loggid in")
 
-# time.sleep(16*60)
+# time.sleep(5*60)
 # Capital to be deployed per stock
 iniCap = 2000   # placing order for 5 stocks
 tgPct = .007    # % profit targeted in a trade
@@ -33,7 +33,7 @@ for k in range(0,len(stk)):
 	instrument_token = stk["itkn"][k]    # DRREDDY 225537
 	# from_datetime = datetime.datetime.now() - datetime.timedelta(days=3)     # From last & days
 	# to_datetime = datetime.datetime.now()
-	doM = 13; mon = 4
+	doM = 18; mon = 4
 	from_datetime = datetime.datetime(2023, mon, doM, 9, 00, 00, 000000)
 	to_datetime = datetime.datetime(2023, mon, doM, 11, 00, 00, 000000)
 	interval = "15minute"
@@ -120,17 +120,17 @@ if test_run == "No":
 		exLoss = int((sl-entry_price)*qty)
 		print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 		print ("Placing 1st buying order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target)
-		order = kite.place_order(variety=kite.VARIETY_AMO,
+		order = kite.place_order(variety=kite.VARIETY_REGULAR,
 		                         exchange=kite.EXCHANGE_NSE,
 		                         tradingsymbol=tsb,
 		                         transaction_type=kite.TRANSACTION_TYPE_BUY,
 		                         quantity=qty,
 		                         product=kite.PRODUCT_MIS,
-		                         order_type=kite.ORDER_TYPE_LIMIT,
+		                         order_type=kite.ORDER_TYPE_SL,
 		                         price=entry_price,
 		                         validity=None,
 		                         disclosed_quantity=None,
-		                         trigger_price=None,
+		                         trigger_price=entry_price,
 		                         squareoff=None,
 		                         stoploss=None,
 		                         trailing_stoploss=None,
@@ -149,17 +149,17 @@ if test_run == "No":
 			exLoss = int((sl-entry_price)*qty)
 			print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 			print ("Placing 2nd buying order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-			order = kite.place_order(variety=kite.VARIETY_AMO,
+			order = kite.place_order(variety=kite.VARIETY_REGULAR,
 			                         exchange=kite.EXCHANGE_NSE,
 			                         tradingsymbol=tsb,
 			                         transaction_type=kite.TRANSACTION_TYPE_BUY,
 			                         quantity=qty,
 			                         product=kite.PRODUCT_MIS,
-			                         order_type=kite.ORDER_TYPE_LIMIT,
+			                         order_type=kite.ORDER_TYPE_SL,
 			                         price=entry_price,
 			                         validity=None,
 			                         disclosed_quantity=None,
-			                         trigger_price=None,
+			                         trigger_price=entry_price,
 			                         squareoff=None,
 			                         stoploss=None,
 			                         trailing_stoploss=None,
@@ -182,17 +182,17 @@ if test_run == "No":
 			exLoss = int((sl-entry_price)*qty)
 			print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 			print ("Placing 3rd buying order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-			order = kite.place_order(variety=kite.VARIETY_AMO,
+			order = kite.place_order(variety=kite.VARIETY_REGULAR,
 			                         exchange=kite.EXCHANGE_NSE,
 			                         tradingsymbol=tsb,
 			                         transaction_type=kite.TRANSACTION_TYPE_BUY,
 			                         quantity=qty,
 			                         product=kite.PRODUCT_MIS,
-			                         order_type=kite.ORDER_TYPE_LIMIT,
+			                         order_type=kite.ORDER_TYPE_SL,
 			                         price=entry_price,
 			                         validity=None,
 			                         disclosed_quantity=None,
-			                         trigger_price=None,
+			                         trigger_price=entry_price,
 			                         squareoff=None,
 			                         stoploss=None,
 			                         trailing_stoploss=None,
@@ -219,17 +219,17 @@ if test_run == "No":
 		print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 
 		print ("Placing 1st selling order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-		order = kite.place_order(variety=kite.VARIETY_AMO,
+		order = kite.place_order(variety=kite.VARIETY_REGULAR,
 		                         exchange=kite.EXCHANGE_NSE,
 		                         tradingsymbol=tsb,
 		                         transaction_type=kite.TRANSACTION_TYPE_SELL,
 		                         quantity=qty,
 		                         product=kite.PRODUCT_MIS,
-		                         order_type=kite.ORDER_TYPE_LIMIT,
+		                         order_type=kite.ORDER_TYPE_SL,
 		                         price=entry_price,
 		                         validity=None,
 		                         disclosed_quantity=None,
-		                         trigger_price=None,
+		                         trigger_price=entry_price,
 		                         squareoff=None,
 		                         stoploss=None,
 		                         trailing_stoploss=None,
@@ -249,16 +249,16 @@ if test_run == "No":
 			exLoss = int((entry_price-sl)*qty)
 			print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 			print ("Placing 2nd selling order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-			order = kite.place_order(variety=kite.VARIETY_AMO,
+			order = kite.place_order(variety=kite.VARIETY_REGULAR,
 			                         exchange=kite.EXCHANGE_NSE,
 			                         transaction_type=kite.TRANSACTION_TYPE_SELL,
 			                         quantity=qty,
 			                         product=kite.PRODUCT_MIS,
-			                         order_type=kite.ORDER_TYPE_LIMIT,
+			                         order_type=kite.ORDER_TYPE_SL,
 			                         price=entry_price,
 			                         validity=None,
 			                         disclosed_quantity=None,
-			                         trigger_price=None,
+			                         trigger_price=entry_price,
 			                         squareoff=None,
 			                         stoploss=None,
 			                         trailing_stoploss=None,

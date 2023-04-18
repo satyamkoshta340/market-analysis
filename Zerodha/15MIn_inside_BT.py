@@ -35,7 +35,7 @@ def insideCandleBT(dt, target_point = 100, sl_point = 80):
         start_time_mm = str(dt["date"][i]).split()[1][3:5]
         if start_time_hh == '09' and start_time_mm == '15':
             flag = True
-        if flag and (c == -1 or result["exit_price"][c] not in [-1, -2] ):
+        # if flag and (c == -1 or result["exit_price"][c] not in [-1, -2] ):
             if dt["high"][i] <150:
                 print("Can't run algo for this stock price")
                 return pd.DataFrame(result)
@@ -65,6 +65,8 @@ def insideCandleBT(dt, target_point = 100, sl_point = 80):
                             result["profit"].append(-1)
                             i += number_of_inside_candles - 1
                             c += 1
+                            sl_point = result["entry_price"][c]*0.0005
+                            target_point = result["entry_price"][c]*0.0007
                     elif max(dt["high"][i+1:i+number_of_inside_candles]) <= (first_15m_low + rsfr):
                         print ("Condition satisfied to place sell order at", dt["date"][i])
                         if pct_candle <= 3.5:
@@ -79,6 +81,8 @@ def insideCandleBT(dt, target_point = 100, sl_point = 80):
                             result["profit"].append(-1)
                             i += number_of_inside_candles -1
                             c += 1
+                            sl_point = result["entry_price"][c]*0.0005
+                            target_point = result["entry_price"][c]*0.007
 
         elif result["exit_price"][c] == -1:
             if start_time_hh == '15' and start_time_mm == '15':
@@ -94,35 +98,37 @@ def insideCandleBT(dt, target_point = 100, sl_point = 80):
                     result["profit"][c] =  result["exit_price"][c] - result["entry_price"][c] if result["trade_type"][c] == "BUY" else result["entry_price"][c] - result["exit_price"][c]
 
             elif result["entry_time"][c] == -1:
-                if result["trade_type"][c] == "BUY" and dt["close"][i] >= result["entry_price"][c]:
+                if start_time_hh >= '13':
+                    pass
+                elif result["trade_type"][c] == "BUY" and dt["high"][i] >= result["entry_price"][c] or (result["trade_type"][c] == "SELL" and dt["low"][i] <= result["entry_price"][c]):
                     result["entry_time"][c] = dt["date"][i]
                     flag = False
 
             elif result["trade_type"] == "BUY":
-                if dt["close"][i] >= result["entry_price"][c] + target_point :
+                if dt["high"][i] >= result["entry_price"][c] + target_point :
                     # print( " Target reached ")
                     result["exit_price"][c] = dt["close"][i]
                     result["exit_time"][c] = dt["date"][i]
                     result["profitable"][c] = True
-                    result["profit"][c] = dt["close"][i] - result["entry_price"][c]
-                elif dt["close"][i] <= result["entry_price"][c] - sl_point :
+                    result["profit"][c] = target_point
+                elif dt["high"][i] <= result["entry_price"][c] - sl_point :
                     # print( "SL triggered")
                     result["exit_price"][c] = dt["close"][i]
                     result["exit_time"][c] = dt["date"][i]
                     result["profitable"][c] = False
-                    result["profit"][c] = result["entry_price"][c] -  dt["close"][i]
+                    result["profit"][c] = -sl_point
 
             elif result["trade_type"][c] == "SELL":
-                if dt["close"][i] <= result["entry_price"][c] - target_point :
+                if dt["low"][i] <= result["entry_price"][c] - target_point :
                     result["exit_price"][c] = dt["close"][i]
                     result["exit_time"][c] = dt["date"][i]
                     result["profitable"][c] = True
-                    result["profit"][c] =  dt["close"][i] - result["entry_price"][c] 
-                elif dt["close"][i] >= result["entry_price"][c] + sl_point :
+                    result["profit"][c] =  target_point 
+                elif dt["low"][i] >= result["entry_price"][c] + sl_point :
                     result["exit_price"][c] = dt["close"][i]
                     result["exit_time"][c] = dt["date"][i]
                     result["profitable"][c] = False
-                    result["profit"][c] = result["entry_price"][c] - dt["close"][i]
+                    result["profit"][c] = -sl_point
         i+=1
 
     df = pd.DataFrame(result)
@@ -148,8 +154,8 @@ for k in range(0,len(stk)):
     # if stk["itkn"][k] != 225537: continue
     # getting historical data
     instrument_token = stk["itkn"][k]
-    from_datetime = datetime.datetime(2023, 4, 16, 8, 00, 00, 000000)
-    to_datetime = datetime.datetime(2023, 4, 17, 18, 00, 00, 000000)
+    from_datetime = datetime.datetime(2023, 4, 18, 9, 15, 00, 0000)
+    to_datetime = datetime.datetime.now()
     interval = "15minute"
     nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
     dt = pd.DataFrame(nd)

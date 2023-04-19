@@ -11,7 +11,7 @@ kite = KiteApp(enctoken=enctoken)
 
 def insideCandleBT(dt, target_point = 100, sl_point = 80):
     scanned = []
-    number_of_inside_candles = 4        #including the first candle
+    number_of_inside_candles = 5        #including the first candle
     result = {
         "trade_type": [],
         "entry_time": [],
@@ -36,7 +36,7 @@ def insideCandleBT(dt, target_point = 100, sl_point = 80):
         if start_time_hh == '09' and start_time_mm == '15':
             flag = True
         if flag and (c == -1 or result["exit_price"][c] not in [-1, -2] ):
-            if dt["high"][i] <150:
+            if dt["high"][i] <50:
                 print("Can't run algo for this stock price")
                 return pd.DataFrame(result)
             else:
@@ -148,12 +148,12 @@ for k in range(0,len(stk)):
     # if stk["itkn"][k] != 225537: continue
     # getting historical data
     instrument_token = stk["itkn"][k]
-    from_datetime = datetime.datetime(2023, 4, 16, 8, 00, 00, 000000)
-    to_datetime = datetime.datetime(2023, 4, 17, 18, 00, 00, 000000)
+    from_datetime = datetime.datetime(2023, 4, 18, 9, 15, 00, 000000)
+    to_datetime = datetime.datetime(2023, 4, 18, 18, 00, 00, 000000)
     interval = "15minute"
     nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
     dt = pd.DataFrame(nd)
-    # print(dt.head())
+    print(dt.head())
     try:
         df = insideCandleBT(dt)
         df["stock"] = [stk["EQ"][k]] * len(df)

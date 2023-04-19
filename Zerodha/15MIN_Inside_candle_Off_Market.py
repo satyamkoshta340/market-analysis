@@ -33,7 +33,8 @@ for k in range(0,len(stk)):
 	instrument_token = stk["itkn"][k]    # DRREDDY 225537
 	# from_datetime = datetime.datetime.now() - datetime.timedelta(days=3)     # From last & days
 	# to_datetime = datetime.datetime.now()
-	doM = 18; mon = 4
+	doM = 18   	# --> Change this everyday 
+	mon = 4
 	from_datetime = datetime.datetime(2023, mon, doM, 9, 00, 00, 000000)
 	to_datetime = datetime.datetime(2023, mon, doM, 11, 00, 00, 000000)
 	interval = "15minute"
@@ -56,11 +57,12 @@ for k in range(0,len(stk)):
 		start_time_hh = str(dt["date"][i]).split()[1][:2]
 		start_time_mm = str(dt["date"][i]).split()[1][3:5]
 		if start_time_hh == '09' and start_time_mm == '15':
-			if dt["high"][i] <150 or dt["high"][i] > 7999:
+			if dt["high"][i] <50 or dt["high"][i] > 7999:
 				continue
 			else:
 				first_15m_high = dt["high"][i]
 				first_15m_low = dt["low"][i]
+				first_15m_close = dt["close"][i]
 				sec_15m_high = max(dt["high"][i+1:len(dt)])
 				sec_15m_low = min(dt["low"][i+1:len(dt)])
 
@@ -74,16 +76,22 @@ for k in range(0,len(stk)):
 					# print (dt.loc[i:i+noc])
 					scanned.append((pct_candle, stk["EQ"][k]))
 					# print (first_15m_high,rsfr, first_15m_low, min(dt["low"][i+1:i+noc]), first_15m_high- rsfr )
-
+					buyfib = round((first_15m_high - min(dt["low"][i+1:i+noc])) / first_candle_size,2)
+					sellfib = round((max(dt["high"][i+1:i+noc]) - first_15m_low) / first_candle_size,2)
 					if min(dt["low"][i+1:i+noc]) >= (first_15m_high - rsfr):
-						print ("Condition satisfied to place buy order", stk["EQ"][k], dt["close"][i+noc], dt["volume"][i+noc],dt["date"][i+noc])
-						print ("Stop loss", sec_15m_low)
-						if pct_candle <= 3.5:
-							filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high, sec_15m_low))
+						if first_15m_close > first_15m_low + 0.6*first_candle_size:
+							print ("Condition satisfied to place buy order", stk["EQ"][k], dt["close"][i+noc], buyfib)
+							slBuy = round(max(sec_15m_low,first_15m_high-first_15m_high*.005),1)
+							if pct_candle <= 3.5:
+								print (stk["EQ"][k], "Entry at", first_15m_high, "SL", slBuy)
+								filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high, slBuy,buyfib,))
 					if max(dt["high"][i+1:i+noc]) <= (first_15m_low + rsfr):
-						print ("Condition satisfied to place sell order", stk["EQ"][k], dt["close"][i+noc], dt["volume"][i+noc],dt["date"][i+noc])
-						if pct_candle <= 3.5:
-							filtered_scan2.append((pct_candle, stk["EQ"][k], first_15m_low, sec_15m_high))
+						if first_15m_close < first_15m_high - 0.6*first_candle_size:	
+							print ("Condition satisfied to place sell order", stk["EQ"][k], dt["close"][i+noc], sellfib)
+							slSell = round(min(sec_15m_high,first_15m_low+first_15m_low*.005),1)
+							if pct_candle <= 3.5:
+								print (stk["EQ"][k], "Entry at", first_15m_low, "SL", slSell)
+								filtered_scan2.append((pct_candle, stk["EQ"][k], first_15m_low, slSell, sellfib))
 
 filtered_scan1 = sorted(filtered_scan1)
 filtered_scan2 = sorted(filtered_scan2)
@@ -97,13 +105,6 @@ test_run = "No"
 
 if test_run == "No":
 	print ("\nData fetched for", str(dt["date"][i]).split()[0], "placing orders...\n" )
-	ft = 0
-	while ft <30:
-		ft = ft+5
-		time.sleep(5)
-		print ("Time remaining to cancel the order...", 30-ft)
-		print ("... Press ctrl+Insert+Fn to break" )
-
 	# Next task
 	# place buy order for top 3 filtered_scan1 stocks - SL .6% below the entry and Target .7% above the entry
 
@@ -120,23 +121,6 @@ if test_run == "No":
 		exLoss = int((sl-entry_price)*qty)
 		print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 		print ("Placing 1st buying order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target)
-		order = kite.place_order(variety=kite.VARIETY_REGULAR,
-		                         exchange=kite.EXCHANGE_NSE,
-		                         tradingsymbol=tsb,
-		                         transaction_type=kite.TRANSACTION_TYPE_BUY,
-		                         quantity=qty,
-		                         product=kite.PRODUCT_MIS,
-		                         order_type=kite.ORDER_TYPE_SL,
-		                         price=entry_price,
-		                         validity=None,
-		                         disclosed_quantity=None,
-		                         trigger_price=entry_price,
-		                         squareoff=None,
-		                         stoploss=None,
-		                         trailing_stoploss=None,
-		                         tag="TradeViaPython")
-		print (order)
-		time.sleep(1)
 		# Placing order for 2nd stock
 		try:
 			stk_no = 1
@@ -149,24 +133,6 @@ if test_run == "No":
 			exLoss = int((sl-entry_price)*qty)
 			print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 			print ("Placing 2nd buying order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-			order = kite.place_order(variety=kite.VARIETY_REGULAR,
-			                         exchange=kite.EXCHANGE_NSE,
-			                         tradingsymbol=tsb,
-			                         transaction_type=kite.TRANSACTION_TYPE_BUY,
-			                         quantity=qty,
-			                         product=kite.PRODUCT_MIS,
-			                         order_type=kite.ORDER_TYPE_SL,
-			                         price=entry_price,
-			                         validity=None,
-			                         disclosed_quantity=None,
-			                         trigger_price=entry_price,
-			                         squareoff=None,
-			                         stoploss=None,
-			                         trailing_stoploss=None,
-			                         tag="TradeViaPython")
-			print (order)
-			time.sleep(1)
-
 		except:
 			print("only 1 stock matched pattern for buying")
 
@@ -182,23 +148,6 @@ if test_run == "No":
 			exLoss = int((sl-entry_price)*qty)
 			print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 			print ("Placing 3rd buying order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-			order = kite.place_order(variety=kite.VARIETY_REGULAR,
-			                         exchange=kite.EXCHANGE_NSE,
-			                         tradingsymbol=tsb,
-			                         transaction_type=kite.TRANSACTION_TYPE_BUY,
-			                         quantity=qty,
-			                         product=kite.PRODUCT_MIS,
-			                         order_type=kite.ORDER_TYPE_SL,
-			                         price=entry_price,
-			                         validity=None,
-			                         disclosed_quantity=None,
-			                         trigger_price=entry_price,
-			                         squareoff=None,
-			                         stoploss=None,
-			                         trailing_stoploss=None,
-			                         tag="TradeViaPython")
-			print (order)
-			time.sleep(1)
 		except:
 			print ("Only 2 stocks found for buying")
 	else:
@@ -219,24 +168,6 @@ if test_run == "No":
 		print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 
 		print ("Placing 1st selling order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-		order = kite.place_order(variety=kite.VARIETY_REGULAR,
-		                         exchange=kite.EXCHANGE_NSE,
-		                         tradingsymbol=tsb,
-		                         transaction_type=kite.TRANSACTION_TYPE_SELL,
-		                         quantity=qty,
-		                         product=kite.PRODUCT_MIS,
-		                         order_type=kite.ORDER_TYPE_SL,
-		                         price=entry_price,
-		                         validity=None,
-		                         disclosed_quantity=None,
-		                         trigger_price=entry_price,
-		                         squareoff=None,
-		                         stoploss=None,
-		                         trailing_stoploss=None,
-		                         tag="TradeViaPython")
-		print (order)
-		time.sleep(1)
-
 		# Placing sell order for 2nd stock
 		try:
 			stk_no = 1
@@ -249,23 +180,18 @@ if test_run == "No":
 			exLoss = int((entry_price-sl)*qty)
 			print ("\nExpected profit {}, loss {}".format(exProfit, exLoss))
 			print ("Placing 2nd selling order for", tsb, "at", entry_price, "qty", qty, "SL",sl,"Target",target )
-			order = kite.place_order(variety=kite.VARIETY_REGULAR,
-			                         exchange=kite.EXCHANGE_NSE,
-			                         transaction_type=kite.TRANSACTION_TYPE_SELL,
-			                         quantity=qty,
-			                         product=kite.PRODUCT_MIS,
-			                         order_type=kite.ORDER_TYPE_SL,
-			                         price=entry_price,
-			                         validity=None,
-			                         disclosed_quantity=None,
-			                         trigger_price=entry_price,
-			                         squareoff=None,
-			                         stoploss=None,
-			                         trailing_stoploss=None,
-			                         tag="TradeViaPython")
-			print (order)
 		except:
 			print("only 1 stock matched pattern for selling")
 
+def getEntryExit (symb):
+	for stk in filtered_scan1:
+		if stk[1] == symb:
+			sl = stk[3]
+			tg = stk[2] + stk[2]*0.007
+	for stk in filtered_scan2:
+		if stk[1] == symb:
+			sl = stk[3]
+			tg = stk[2] + stk[2]*0.007
+	return (symb,sl,tg)
 
 

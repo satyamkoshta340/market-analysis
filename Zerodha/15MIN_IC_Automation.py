@@ -6,17 +6,26 @@ import datetime
 import os
 from dotenv import load_dotenv
 load_dotenv()
-
+from FifteenMin_IC import getEntryExit
 enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
 
 # One hour makes 12 candles of 5 minutes 
 # This program will run every 5 minute to check the order book and to place/cancel orders
 t = 0 	# starting at 10:30 AM every trading day
+tries = 0
 while t < 12*5:
 	t+=1
-	ods = pd.DataFrame(kite.orders()) 	# getting the order object
-	pos = pd.DataFrame(kite.positions()) # getting the position object from Kite
+	tries = 0
+	while tries < 10:
+		try:
+			ods = pd.DataFrame(kite.orders()) 	# getting the order object
+			pos = pd.DataFrame(kite.positions()) # getting the position object from Kite
+			tries =10
+		except:
+			tries += 1
+			print ("Connection issue... please try after some time.")
+			time.sleep(7)
 
 	posHeld = []; posExited =[]; entryTriggered = []
 	print("==================Getting the entryPrice and symbol name for the positions held and exited=====================")
@@ -42,111 +51,148 @@ while t < 12*5:
 	print ("We are holding {} positions as of now".format(len(posHeld)))
 	if len(posHeld)>0:
 		print (posHeld)
-		print("# Placing SL and target orders for the open positions in the account")
 	print ("We have exited {} positions as of now".format(len(posExited)))
+	if len(posExited)>0:
+		print (posExited)
+	ordInSystem = len(ods[(ods["status"]=="TRIGGER PENDING") & (ods["product"]=="MIS")])
+	today = datetime.datetime.now().date()
+	pendingEntries = ods[(ods["status"]=="TRIGGER PENDING") & (ods["product"]=="MIS")]["tradingsymbol"]
+	if ordInSystem > 0:
+		print ("We have {} entry pending for the inside candle pattern found today {}".format(ordInSystem,today))
+		print (pendingEntries)
 
 	# Placing SL and target orders for the open positions in the account
 	for k in range(0,len(posHeld)):
+		qty = posHeld[k][1]
+		tsb = posHeld[k][0]
+		entryPrice = posHeld[k][2]
+		if "BANKNIFTY" in posHeld[0][0]:
+			print ("Having position in BANKNIFTY... skipping")
+			continue
 		checkLOrder = len(ods[(ods["tradingsymbol"]==tsb) & (ods["status"]=="OPEN")])
 		checkTPOrder = len(ods[(ods["tradingsymbol"]==tsb) & (ods["status"]=="TRIGGER PENDING")])
-		if checkLOrder > 0 or checkTPOrder > 0:
-			print ("Order already placed for {} in the sytem... Skipping...".format(tsb))
-			continue
+
 		# below code will place orders for buying entry only
 		if qty > 0 :
 			tgPct = 0.015 		# have a fixed target of 1.5%
-			slPct = 0.006		# have a fixed SL of 0.6%
-			tsb = posHeld[k][0]
-			qty = posHeld[k][1]
-			entryPrice = posHeld[k][2]
-			slPrice = round(entryPrice - entryPrice*slPct,1)
-			tgPrice = round(entryPrice + entryPrice*tgPct,1)
-			# Stop loss order will be a stop loss order while target order will be a limit order
-			print (tsb, qty, entryPrice, slPrice, tgPrice)
-			targetOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
-						exchange=kite.EXCHANGE_NSE,
-						tradingsymbol=tsb,
-						transaction_type=kite.TRANSACTION_TYPE_SELL,
-						quantity=qty,product=kite.PRODUCT_MIS,
-						order_type=kite.ORDER_TYPE_LIMIT,
-						price=tgPrice,
-						validity=None,	disclosed_quantity=None,
-						trigger_price=None,	squareoff=None,	stoploss=None,
-						trailing_stoploss=None,	tag="TradeViaPython")
-			print ("Placed taget order for", tsb, "at", tgPrice)
-			time.sleep(5)
-			# If the price is below the trigger this order won't be placed, so using try and except
+			slPct = 0.005		# have a fixed SL of 0.6%
+			print("# Placing SL and target orders for the open positions in the account")
 			try:
-				slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
+				slPrice = getEntryExit(tsb)[1]
+				tgPrice = getEntryExit(tsb)[2]
+				print ("Taking optimized SL and target", tsb)
+			except:
+				slPrice = round(entryPrice - entryPrice*slPct,1)
+				tgPrice = round(entryPrice + entryPrice*tgPct,1)
+				print ("Taking hard coded SL and target", tsb)
+			# Stop loss order will be a stop loss order while target order will be a limit order
+			if checkLOrder > 0:
+				print ("Limit/Target Order already placed for {} in the sytem... Skipping...".format(tsb))
+				continue
+			else:
+				print (tsb, "qty", qty, "entryPrice", entryPrice, "slPrice", slPrice, "tgPrice", tgPrice)
+				targetOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
 							exchange=kite.EXCHANGE_NSE,
 							tradingsymbol=tsb,
 							transaction_type=kite.TRANSACTION_TYPE_SELL,
 							quantity=qty,product=kite.PRODUCT_MIS,
-							order_type=kite.ORDER_TYPE_SL,
-							price=slPrice,validity=None,
-							disclosed_quantity=None,trigger_price=slPrice,
-							squareoff=None,stoploss=None,
-							trailing_stoploss=None,tag="TradeViaPython")
-				print ("Place sl order for", tsb,"at", slPrice)
-			except:
-				print ("Price is below SL trigger price, exiting positions at market price", tsb, slPrice)
-				slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
-				exchange=kite.EXCHANGE_NSE,
-				tradingsymbol=tsb,transaction_type=kite.TRANSACTION_TYPE_SELL,
-				quantity=qty,product=kite.PRODUCT_MIS,
-				order_type=kite.ORDER_TYPE_MARKET,
-				price=None,validity=None,disclosed_quantity=None,
-				trigger_price=None,squareoff=None,stoploss=None,
-				trailing_stoploss=None,
-				tag="TradeViaPython")
+							order_type=kite.ORDER_TYPE_LIMIT,
+							price=tgPrice,
+							validity=None,	disclosed_quantity=None,
+							trigger_price=None,	squareoff=None,	stoploss=None,
+							trailing_stoploss=None,	tag="TradeViaPython")
+				print ("Placed taget order for", tsb, "at", tgPrice)
+				time.sleep(5)
+			# If the price is below the trigger this order won't be placed, so using try and except
+			if checkTPOrder > 0:
+				print ("Target Order already placed for {} in the sytem... Skipping...".format(tsb))
+				continue
+			else:
+				try:
+					slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
+								exchange=kite.EXCHANGE_NSE,
+								tradingsymbol=tsb,
+								transaction_type=kite.TRANSACTION_TYPE_SELL,
+								quantity=qty,product=kite.PRODUCT_MIS,
+								order_type=kite.ORDER_TYPE_SL,
+								price=slPrice,validity=None,
+								disclosed_quantity=None,trigger_price=slPrice,
+								squareoff=None,stoploss=None,
+								trailing_stoploss=None,tag="TradeViaPython")
+					print ("Place sl order for", tsb,"at", slPrice)
+				except:
+					print ("Price is below SL trigger price, exiting positions at market price", tsb, slPrice)
+					slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
+					exchange=kite.EXCHANGE_NSE,
+					tradingsymbol=tsb,transaction_type=kite.TRANSACTION_TYPE_SELL,
+					quantity=qty,product=kite.PRODUCT_MIS,
+					order_type=kite.ORDER_TYPE_MARKET,
+					price=None,validity=None,disclosed_quantity=None,
+					trigger_price=None,squareoff=None,stoploss=None,
+					trailing_stoploss=None,
+					tag="TradeViaPython")
 
 		# Placing SL and target order for stocks shorted
 		if qty < 0 :
+			qty = abs(qty)
 			tgPct = 0.015 		# have a fixed target of 1.5%
 			slPct = 0.006		# have a fixed SL of 0.6%
 			tsb = posHeld[k][0]
-			qty = posHeld[k][1]
 			entryPrice = posHeld[k][2]
-			slPrice = round(entryPrice + entryPrice*slPct,1)
-			tgPrice = round(entryPrice - entryPrice*tgPct,1)
-			# Stop loss order will be a stop loss order while target order will be a limit order
-			print (tsb, qty, entryPrice, slPrice, tgPrice)
-			targetOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
-						exchange=kite.EXCHANGE_NSE,
-						tradingsymbol=tsb,
-						transaction_type=kite.TRANSACTION_TYPE_BUY,
-						quantity=qty,product=kite.PRODUCT_MIS,
-						order_type=kite.ORDER_TYPE_LIMIT,
-						price=tgPrice,
-						validity=None,	disclosed_quantity=None,
-						trigger_price=None,	squareoff=None,	stoploss=None,
-						trailing_stoploss=None,	tag="TradeViaPython")
-			print ("Placed taget order for", tsb, "at", tgPrice)
-			time.sleep(5)
-			# If the price is below the trigger this order won't be placed, so using try and except
 			try:
-				slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
+				slPrice = getEntryExit(tsb)[1]
+				tgPrice = getEntryExit(tsb)[2]
+				print ("Taking optimized SL and target", tsb)
+			except:
+				slPrice = round(entryPrice + entryPrice*slPct,1)
+				tgPrice = round(entryPrice - entryPrice*tgPct,1)
+				print ("Taking hard coded SL and target",tsb)
+			# Stop loss order will be a stop loss order while target order will be a limit order
+			if checkTPOrder > 0:
+				print ("Target Order already placed for {} in the sytem... Skipping...".format(tsb))
+				continue
+			else:	
+				print (tsb, "qty", qty, "entryPrice", entryPrice, "slPrice", slPrice, "tgPrice", tgPrice)
+				targetOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
 							exchange=kite.EXCHANGE_NSE,
 							tradingsymbol=tsb,
 							transaction_type=kite.TRANSACTION_TYPE_BUY,
 							quantity=qty,product=kite.PRODUCT_MIS,
-							order_type=kite.ORDER_TYPE_SL,
-							price=slPrice,validity=None,
-							disclosed_quantity=None,trigger_price=slPrice,
-							squareoff=None,stoploss=None,
-							trailing_stoploss=None,tag="TradeViaPython")
-				print ("Place sl order for", tsb,"at", slPrice)
-			except:
-				print ("Price is below SL trigger price, exiting positions at market price", tsb, slPrice)
-				slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
-				exchange=kite.EXCHANGE_NSE,
-				tradingsymbol=tsb,transaction_type=kite.TRANSACTION_TYPE_BUY,
-				quantity=qty,product=kite.PRODUCT_MIS,
-				order_type=kite.ORDER_TYPE_MARKET,
-				price=None,validity=None,disclosed_quantity=None,
-				trigger_price=None,squareoff=None,stoploss=None,
-				trailing_stoploss=None,
-				tag="TradeViaPython")
+							order_type=kite.ORDER_TYPE_LIMIT,
+							price=tgPrice,
+							validity=None,	disclosed_quantity=None,
+							trigger_price=None,	squareoff=None,	stoploss=None,
+							trailing_stoploss=None,	tag="TradeViaPython")
+				print ("Placed taget order for", tsb, "at", tgPrice)
+				time.sleep(5)
+			# If the price is below the trigger this order won't be placed, so using try and except
+			if checkLOrder > 0:
+				print ("Limit/Target Order already placed for {} in the sytem... Skipping...".format(tsb))
+				continue
+			else:
+				try:
+					slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
+								exchange=kite.EXCHANGE_NSE,
+								tradingsymbol=tsb,
+								transaction_type=kite.TRANSACTION_TYPE_BUY,
+								quantity=qty,product=kite.PRODUCT_MIS,
+								order_type=kite.ORDER_TYPE_SL,
+								price=slPrice,validity=None,
+								disclosed_quantity=None,trigger_price=slPrice,
+								squareoff=None,stoploss=None,
+								trailing_stoploss=None,tag="TradeViaPython")
+					print ("Place sl order for", tsb,"at", slPrice)
+				except:
+					print ("Price is below SL trigger price, exiting positions at market price", tsb, slPrice)
+					slOrder = 	kite.place_order(variety=kite.VARIETY_REGULAR,
+					exchange=kite.EXCHANGE_NSE,
+					tradingsymbol=tsb,transaction_type=kite.TRANSACTION_TYPE_BUY,
+					quantity=qty,product=kite.PRODUCT_MIS,
+					order_type=kite.ORDER_TYPE_MARKET,
+					price=None,validity=None,disclosed_quantity=None,
+					trigger_price=None,squareoff=None,stoploss=None,
+					trailing_stoploss=None,
+					tag="TradeViaPython")
 
 	# Cancelling other open/SL orders once the position is exited for a stock
 	if len(posExited) == 0:
@@ -161,12 +207,12 @@ while t < 12*5:
 		if len(getOIDs) != 0:
 			for getOID in getOIDs:
 				tobeCancelled.append(getOID)
-				print ("Cancelling limit order for", tsb, getOID)
+				print ("SL HIT!... Cancelling limit order for", tsb, getOID)
 				cancelOrder = kite.cancel_order(variety=kite.VARIETY_REGULAR, order_id = getOID)
 
 		if len(getTPIDs) != 0:
 			for getTPID in getTPIDs:
-				print ("Cancelling SL order for", tsb, getTPID)
+				print ("Target HIT!... Cancelling SL order for", tsb, getTPID)
 				tobeCancelled.append(getTPID)
 				cancelOrder = kite.cancel_order(variety=kite.VARIETY_REGULAR, order_id = getTPID)
 
@@ -174,8 +220,8 @@ while t < 12*5:
 
 	hrOfDay = int(str(datetime.datetime.now().time())[:2])
 	minOfDay = int(str(datetime.datetime.now().time())[3:5])
-	if hrOfDay > 12:
-		print ("\nWe are trading past 1 o' clock... checking pending triggers and cancelling...")
+	if hrOfDay >= 13 and minOfDay > 31:
+		print ("\nWe are trading past 1-1/2 o' clock... checking pending triggers and cancelling...")
 		# getting the name of the stocks that have pending orders 
 		stk = ods[ods["status"]=="TRIGGER PENDING"]["tradingsymbol"]
 		for stk in stk:
@@ -184,9 +230,10 @@ while t < 12*5:
 				for getTPID in getTPID:
 					print ("Cancelling order for", stk, getTPID)
 					cancelOrder = kite.cancel_order(variety=kite.VARIETY_REGULAR, order_id = getTPID)
-	if hrOfDay >=15 and minOfDay >=30:
+	if hrOfDay >=15 and minOfDay >=20:
 		print ("Running past market hours... exiting", hrOfDay, minOfDay)
 		break
-
-	print ("---------------------- Taking rest for 5 minute -------------------------------")
-	time.sleep(5*60)
+	print (datetime.datetime.now().time())
+	restTime = 5
+	print ("---------------------- Taking rest for {} minute -------------------------------".format(restTime))
+	time.sleep(restTime*60)

@@ -19,7 +19,7 @@ kite = KiteApp(enctoken=enctoken)
 instrument_token = 260105    # NIFTY BANK
 # time.sleep(78*60)
 
-to_datetime = datetime.datetime(2023, 4, 17, 18, 00, 00, 000000)
+to_datetime = datetime.datetime(2023, 4, 20, 18, 00, 00, 000000)
 from_datetime = to_datetime - datetime.timedelta(days=1)     # From last & days
 
 interval = "15minute"

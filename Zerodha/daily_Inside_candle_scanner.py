@@ -8,7 +8,7 @@ load_dotenv()
 
 enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
-# print("Starting", kite.positions())
+print("Starting", kite.positions())
 # Capital to be deployed per stock
 
 # Get Historical Data
@@ -29,7 +29,7 @@ for k in range(0,len(stk)):
 	# from_datetime = datetime.datetime.now() - datetime.timedelta(days=30)     # From last & days
 	# to_datetime = datetime.datetime.now()
 
-	to_datetime = datetime.datetime(2023, 4, 6, 18, 00, 00, 000000)
+	to_datetime = datetime.datetime(2023, 4, 20, 18, 00, 00, 000000)
 	from_datetime = to_datetime - datetime.timedelta(days=60)     # From last & days
 
 	interval = "day"

@@ -58,7 +58,7 @@ while t < 12*5:
 	today = datetime.datetime.now().date()
 	pendingEntries = ods[(ods["status"]=="TRIGGER PENDING") & (ods["product"]=="MIS")]["tradingsymbol"]
 	if ordInSystem > 0:
-		print ("We have {} entry pending for the inside candle pattern found today {}".format(ordInSystem,today))
+		print ("We have {} entry pending orders {}".format(ordInSystem,today))
 		print (pendingEntries)
 
 	# Placing SL and target orders for the open positions in the account
@@ -66,8 +66,8 @@ while t < 12*5:
 		qty = posHeld[k][1]
 		tsb = posHeld[k][0]
 		entryPrice = posHeld[k][2]
-		if "BANKNIFTY" in posHeld[0][0]:
-			print ("Having position in BANKNIFTY... skipping")
+		if "BANKNIFTY" in posHeld[0][0] or "NIFTY" in posHeld[0][0]:
+			print ("Having position in BANKNIFTY/NIFTY... skipping")
 			continue
 		checkLOrder = len(ods[(ods["tradingsymbol"]==tsb) & (ods["status"]=="OPEN")])
 		checkTPOrder = len(ods[(ods["tradingsymbol"]==tsb) & (ods["status"]=="TRIGGER PENDING")])
@@ -76,11 +76,11 @@ while t < 12*5:
 		if qty > 0 :
 			tgPct = 0.015 		# have a fixed target of 1.5%
 			slPct = 0.005		# have a fixed SL of 0.6%
-			print("# Placing SL and target orders for the open positions in the account")
+			# print("# Placing SL and target orders for the open positions in the account")
 			try:
 				slPrice = getEntryExit(tsb)[1]
 				tgPrice = getEntryExit(tsb)[2]
-				print ("Taking optimized SL and target", tsb)
+				# print (tsb, "optimized SL and target choosen")
 			except:
 				slPrice = round(entryPrice - entryPrice*slPct,1)
 				tgPrice = round(entryPrice + entryPrice*tgPct,1)
@@ -142,7 +142,7 @@ while t < 12*5:
 			try:
 				slPrice = getEntryExit(tsb)[1]
 				tgPrice = getEntryExit(tsb)[2]
-				print ("Taking optimized SL and target", tsb)
+				# print (tsb,"Optimized SL and target choosen")
 			except:
 				slPrice = round(entryPrice + entryPrice*slPct,1)
 				tgPrice = round(entryPrice - entryPrice*tgPct,1)

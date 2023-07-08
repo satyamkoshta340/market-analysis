@@ -128,9 +128,9 @@ def analysisOf920(dp):
 def main():
     print (os.getcwd())
     try:
-        dp = pd.read_csv( os.getcwd()+"/strategies/assets/BANK_NIFTY_5_MIN_2020.csv")
+        dp = pd.read_csv( os.getcwd()+"/strategies/assets/BANK_NIFTY_5_MIN_2015.csv")
     except:
-        dp = pd.read_csv( os.getcwd()+"\\assets\\BANK_NIFTY_5_MIN_2020.csv")
+        dp = pd.read_csv( os.getcwd()+"\\assets\\BANK_NIFTY_5_MIN_2016.csv")
 
     result = analysisOf920(dp)
     result = pd.DataFrame(result)

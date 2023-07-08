@@ -14,7 +14,7 @@ def getEntryExitTime(dt,entryPrice,Tg,SL,txntype):
 		maet = dt["date"][dt[dt["high"]==mae]["date"].index[0]]
 		for i in range(5, len(dt)):
 			if dt["high"][i] >= entryPrice:
-				entryTime = dt["date"][i]
+				entryTime = dt["date"][i].time()
 				candleNo = i
 				print ("Bought at", i, "th candle")
 				status = "Entered"
@@ -24,12 +24,12 @@ def getEntryExitTime(dt,entryPrice,Tg,SL,txntype):
 				exitTime = "No exit"
 			for cn in range(candleNo+1, len(dt)):
 				if dt["low"][cn] <= SL:
-					exitTime = dt["date"][cn]
+					exitTime = dt["date"][cn].time()
 					status = "SL Hit"
 					print ("Buy SL Hit",cn)
 					break					
 				elif dt["high"][cn] >= Tg:
-					exitTime = dt["date"][cn]
+					exitTime = dt["date"][cn].time()
 					status = "Target Hit"
 					print ("Buy Target hit",cn)
 					break
@@ -46,7 +46,7 @@ def getEntryExitTime(dt,entryPrice,Tg,SL,txntype):
 		candleNo = None
 		for i in range(5, len(dt)):
 			if dt["low"][i] <= entryPrice:
-				entryTime = dt["date"][i]
+				entryTime = dt["date"][i].time()
 				candleNo = i
 				status = "Entered"
 				print ("Sold at",i,"ith candle")
@@ -57,12 +57,12 @@ def getEntryExitTime(dt,entryPrice,Tg,SL,txntype):
 			for cn in range(candleNo+1, len(dt)):
 				# print (dt["low"][cn],Tg,i)
 				if dt["high"][cn] >= SL:
-					exitTime = dt["date"][cn]
+					exitTime = dt["date"][cn].time()
 					status = "SL Hit"
 					# print ("Sell SL hit",cn)
 					break					
 				elif dt["low"][cn] <= Tg:
-					exitTime = dt["date"][cn]
+					exitTime = dt["date"][cn].time()
 					status = "Target Hit"
 					# print ("Sell target meet",cn)
 					break
@@ -92,12 +92,14 @@ filtered_scan1 = []; filtered_scan2 = []
 noc = 5 # number of inside candles to be checked
 ptf = 0   # pattern found in #stocks
 
-dy=112
+dy=12
 while dy > 1:
 	dy = dy-1
 	from_datetime = datetime.datetime(2023, 4, 21, 9, 00, 00, 000000) - datetime.timedelta(days=dy)     # From last & days
 	to_datetime = datetime.datetime(2023, 4, 21, 9, 00, 00, 000000) - datetime.timedelta(days=dy-1) 
 	interval = "15minute"
+	tradingDay = (datetime.datetime(2023, 4, 21, 9, 00, 00, 000000) - datetime.timedelta(days=dy) ).date()
+	# print (tradingDay)
 	hld = 	0	# assigning a value to move on in case the data is enquired on a holiday after 3 blank datasets
 	# Lopping through the list of FNO stocks (having high volumes)
 	for k in range(0,len(stk)):
@@ -163,14 +165,14 @@ while dy > 1:
 									exitTime = results[2]
 									status = results[0]
 									mae = results[3]
-									maet = results[4]
+									maet = results[4].time()
 									qty = int(5*iniCap/entryPrice)
 									exProfit = int((-entryPrice+tgBuy)*qty)
 									exLoss = int((entryPrice-SLBuy)*qty)
 									print ("BUY", tsb, "at", entryPrice, "qty", qty, "SL",SLBuy,"Target",tgBuy )
 									print ("Expected profit {}, loss {}".format(exProfit, exLoss), )
 									print (results[0],"Entry time", results[1], "Exit time", results[2],"\n" )
-									filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high, SLBuy,buyfib,tgBuy,"Buy",status,entryTime,exitTime,mae,maet))
+									filtered_scan1.append((pct_candle, stk["EQ"][k], first_15m_high, SLBuy,buyfib,tgBuy,"Buy",status,entryTime,exitTime,mae,maet,tradingDay))
 
 						if max(dt["high"][i+1:i+noc]) <= (first_15m_low + rsfr):
 							if first_15m_close < first_15m_high - 0.6*first_candle_size:	
@@ -184,14 +186,14 @@ while dy > 1:
 									exitTime = results[2]
 									status = results[0]
 									mae = results[3]
-									maet = results[4]
+									maet = results[4].time()
 									qty = int(5*iniCap/entryPrice)
 									exProfit = int((entryPrice-tgSell)*qty)
 									exLoss = int((entryPrice-slSell)*qty)
 									print ("SELL", tsb, "at", entryPrice, "qty", qty, "SL",slSell,"Target",tgSell )
 									print ("Expected profit {}, loss {}".format(exProfit, exLoss))
 									print (results[0],"Entry time", results[1], "Exit time", results[2], "\n")
-									filtered_scan2.append((pct_candle, stk["EQ"][k], first_15m_low, slSell, sellfib,tgSell,"Sell",status,entryTime,exitTime,mae,maet))
+									filtered_scan2.append((pct_candle, stk["EQ"][k], first_15m_low, slSell, sellfib,tgSell,"Sell",status,entryTime,exitTime,mae,maet,tradingDay))
 
 		# if stk["EQ"][k] == "SBILIFE":
 		# 	print ("Exiting here")
@@ -199,7 +201,7 @@ while dy > 1:
 
 	filtered_scan1 = sorted(filtered_scan1)
 	filtered_scan2 = sorted(filtered_scan2)
-	finalStocks = filtered_scan1[:3] + filtered_scan2[:2]
+	finalStocks = filtered_scan1 + filtered_scan2
 
 # print ("Total stocks found", len(scanned), sorted(scanned))
 # print ("\nStocks for Sell",len(filtered_scan2), filtered_scan2)
@@ -207,11 +209,12 @@ while dy > 1:
 
 orderbook = pd.DataFrame()
 today = datetime.datetime.now().date()
-orderbook["date"] = [today for s in finalStocks]
+orderbook["date"] = [s[12] for s in finalStocks]
 orderbook["Order"] = [s[6] for s in finalStocks]
 orderbook["Stock"] = [s[1] for s in finalStocks]
 orderbook["pctCandle"] = [s[0] for s in finalStocks]
 orderbook["fibRetr"] = [s[4] for s in finalStocks]
+orderbook["fibBand"] = [s[4] if s[4] <=0.5 else ">0.5" for s in finalStocks]
 orderbook["entryPrice"] = [s[2] for s in finalStocks]
 orderbook["SL"] = [s[3] for s in finalStocks]
 orderbook["Target"] = [s[5] for s in finalStocks]
@@ -221,6 +224,6 @@ orderbook["exitTime"] = [s[9] for s in finalStocks]
 orderbook["maxTarget"] = [s[10] for s in finalStocks]
 orderbook["maxTargetTime"] = [s[11] for s in finalStocks]
 
-orderbook.to_csv("orderbook1.csv")
+orderbook.to_csv("orderbook2.csv")
 
 print (orderbook)

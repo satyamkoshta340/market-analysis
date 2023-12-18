@@ -47,7 +47,7 @@ while ATR_day > 1:
 		symb = stk["EQ"][k]
 	# 	if symb != 'NAHARINDUS':
 	# 		continue
-		to_datetime = datetime.datetime(2023, 12, 2, 22, 00, 00, 000000)
+		to_datetime = datetime.datetime(2023, 12, 14, 22, 00, 00, 000000)
 		from_datetime = to_datetime - datetime.timedelta(days=cDays)     # From last & days
 		interval = "day"
 		# interval = "week"	

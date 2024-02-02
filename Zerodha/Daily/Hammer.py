@@ -85,27 +85,30 @@ for k in range(0,len(stk)):
 				best_hammer.append((stk["EQ"][k], dt['close'][lst],body_times_lower_wick, pct_away_from_high,move_during_day))
 			else:
 				simple_hammer+=1
-				# print ('**Simple**',stk["EQ"][k], "lastClose:", lastClose, ', body times wick',body_times_lower_wick,\
-				# ', pct_away_from_high',pct_away_from_high,', move_during_day',move_during_day,\
-				# ', times_lowerWk_grt_thn_upperWk', times_lowerWk_grt_thn_upperWk)
-
-		# Adding extra filters 	
-		# if lower_wick > 3*body_of_candle and lower_wick > 2.5*upper_wick and move_during_day > 3 \
-		# and times_lowerWk_grt_thn_upperWk > 2:
-		# 	filtered_scan1.append((stk["EQ"][k], dt['close'][lst],body_times_lower_wick, pct_away_from_high,move_during_day))
-		# 	print ('-^-^-^-',stk["EQ"][k], "lastClose:", lastClose, ', body times wick',body_times_lower_wick,\
-		# 		', pct_away_from_high',pct_away_from_high,', move_during_day',move_during_day,\
-		# 		', times_lowerWk_grt_thn_upperWk', times_lowerWk_grt_thn_upperWk)
 
 
 	except:
 		continue
  
 sorted_by_body_times_wick = sorted (best_hammer, key = lambda x:x[2])
-print ("Conditions looked for a hammer\
-	1. lower_wick > 3*body_of_candle\
-	2. lower_wick > 2.5*upper_wick\
-	3. move_during_day > 3 percent\
-	4. times_lowerWk_grt_thn_upperWk > 2")
-
 print ("\nStocks to Buy",len(sorted_by_body_times_wick), sorted_by_body_times_wick)
+
+
+
+# Back testing code to be written with following conditions 
+
+# 1. Write back testing for one day first
+# 2. Get all the stocks using the above code for entries
+# 3. Entry (next day) will be between closing and high of the signal day 
+# 4. SL will be low of the hammer candle (signal day)
+# 5. Target will be two times of the SL. 
+	# For example entry was made at 35 for a stock and hammer's low is 34.5 (SL) then target would be 36 (2x0.5)
+
+# Stats needed 
+# Check for SL/Target hit in next 2 days from entry
+# 1. Total stocks found -> Number of profitable stocks/losing stocks/no SL/Target hit stocks - overall cumulative return
+# 2. Exit after 2 day's at closing price if SL not hit - %profit from such exit strategy
+# 3. Now do it for a month
+
+
+

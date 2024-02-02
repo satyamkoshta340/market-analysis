@@ -11,7 +11,7 @@ load_dotenv()
 # Providing enc_token to login to zerodha portal
 enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
-print("Starting", kite.positions())
+# print("Starting", kite.positions())
 # Capital to be deployed per stock
 
 # Getting path of the current directory, this helps when collaborating on git
@@ -19,7 +19,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 print (dir_path)
 
 # This is the number for which historical data of a stock will be fetched
-cDays = 80
+cDays = 140
 ATR_day = 7 # day before from current date
 # Reading stock symobl codes from the file saved locally
 stk = pd.read_csv( dir_path+ "/nse_stocks.csv")
@@ -42,14 +42,18 @@ while ATR_day > 1:
 	ATR_day-=1
 	printOnetime = 1
 	for k in range(0,len(stk)):
+	# for k in range(1217,1218):
 		# Getting the stock token from the local file here to get the historical data
 		instrument_token = stk["itkn"][k]    # DRREDDY 225537
 		# Define the time up to which data needs to be fetched (yyyy, MM, DD, HH, MM, SS)
 		symb = stk["EQ"][k]
-	# 	if symb != 'NAHARINDUS':
-	# 		continue
+		# if symb == 'IRB':
+		# 	print ("Last closing price", )
+		# 	continue
+		# else:
+		# 	print(k)
 
-		to_datetime = datetime.datetime(2023, 12, 16, 20, 00, 00, 000000)
+		to_datetime = datetime.datetime(2024, 2, 1, 20, 00, 00, 000000)
 		from_datetime = to_datetime - datetime.timedelta(days=cDays)     # From last & days
 		interval = "day"
 
@@ -58,9 +62,12 @@ while ATR_day > 1:
 			dt = pd.DataFrame(nd)
 			# print (symb, len(dt))
 		except:
-			print (symb,"Not able to fetch data") 
+			# print (symb,"Not able to fetch data") 
 			continue
 		# print (stk["EQ"][k], dt.head(1))
+		if symb == 'IRB':
+			print ("Last closing price", dt['close'][len(dt)-1])
+
 		if len(dt) < 80:
 			# print ("Error fetching data for", stk["EQ"][k])
 			# erred.append(stk["EQ"][k])b
@@ -99,8 +106,9 @@ while ATR_day > 1:
 
 
 		# closing price should be 15% of the moving averages to ensure that much of the move still remains
-		if dt['close'][lst] > dt['EMA50'][lst]*1.15 or dt['close'][lst] > dt['EMA50'][lst]*1.20 or dt['close'][lst] > dt['EMA20'][lst]*1.20 :
-			continue
+		# if dt['close'][lst] > dt['EMA50'][lst]*1.15 or dt['close'][lst] > dt['EMA50'][lst]*1.20 or dt['close'][lst] > dt['EMA20'][lst]*1.20 :
+		# 	print ('Skipping! Closing price more than 15% from ltp')
+		# 	continue
 
 		# checking the slope of 200 moving average - I need this slope to be upward
 		if dt['EMA50'][lst] - dt['EMA50'][lst-2] < 0:
@@ -109,8 +117,13 @@ while ATR_day > 1:
 		high_in_past_60D = max(dt['high'][lst-60:lst])
 		pctAway_from_high = round((dt["close"][lst]- high_in_past_60D)/dt["close"][lst]*100,2)
 
+
+		# print ('LTP', dt["close"][lst], 'Prev LTP', dt["close"][lst-1] /
+		# 	'1.5 times ATR', 1.5*dt["ATR"][lst-1],  'Last volume', dt["volume"][lst], '2times EMA vol', 2*dt["EMA21_volume"][lst])
+
 		# First check the green candle with high vol
 		if dt["close"][lst] > dt["close"][lst-1] + 1.5*dt["ATR"][lst-1]  and dt["volume"][lst] >= 2*dt["EMA21_volume"][lst]:
+			# print ("First condition met")
 			ddmmyy = dt['date'][lst].date()
 			up_move.append((symb,ddmmyy))
 			last_30_day_range = round((max(dt['high'][lst-30:lst]) - min(dt['low'][lst-30:lst]))/min(dt['low'][lst-30:lst])*100,2)
@@ -131,20 +144,26 @@ while ATR_day > 1:
 				if 'RedRedGreen' in e:
 					# if dt["date"][x].date() == '2023-07-04':
 					# print (dt["date"][x].date(), symb)
-					try:
-						return_in_a_day = round((dt["close"][x+1] - dt["close"][x])/dt["close"][x]*100,2)
-						return_in_two_days = round((dt["close"][x+2] - dt["close"][x])/dt["close"][x]*100,2)
-						print (dt['date'][x].date(), symb,dt["close"][x], 'Candle color sequence matched')
-						print ('Return in a day:', return_in_a_day,'%', 'Return in two days:', return_in_two_days,'%')
-						stock_for_tom.append((symb,dt["close"][x],dt["volume"][x],dt["EMA21_volume"][x], dt['date'][x].date(),return_in_a_day,return_in_two_days,ddmmyy,last_30_day_range,last_20_day_range,last_10_day_range))
+
+					ltp = dt["close"][x]
+					vol, ema21_vol = int(dt["volume"][x]), int(dt["EMA21_volume"][x])
+					trade_date = dt['date'][x].date()
+				# check if any of the red candle broke the low of ATR break out candle
+					if dt["low"][x] < low_of_ATR_Break or dt["low"][x-1] < low_of_ATR_Break :
+						pass
+						# print ('AVOID ---',symb, "One of the red candle broke low of initial breakout Green! ")
+					else:
+						try:
+							return_in_a_day = round((dt["close"][x+1] - dt["close"][x])/dt["close"][x]*100,2)
+							return_in_two_days = round((dt["close"][x+2] - dt["close"][x])/dt["close"][x]*100,2)
+							print (dt['date'][x].date(), symb,dt["close"][x], 'Candle color sequence matched')
+							print ('Return in a day:', return_in_a_day,'%', 'Return in two days:', return_in_two_days,'%')
+							stock_for_tom.append((symb,ltp, vol, ema21_vol, trade_date,return_in_a_day,return_in_two_days,ddmmyy,last_30_day_range,last_20_day_range,last_10_day_range))
+							break
+						except:
+							check_these.append((symb,ltp, dt['date'][x].date()))
+							print (symb, "===== made RRG pattern today", dt['date'][x].date(), ",pctAway_from_high", pctAway_from_high, ', -high in p60', high_in_past_60D)
 						break
-					except:
-						check_these.append((symb,dt["close"][x],dt["volume"][x],dt["EMA21_volume"][x], dt['date'][x].date()))
-						print (symb, "===== made RRG pattern today", dt['date'][x].date(), "pctAway_from_high", pctAway_from_high)
-						# check if any of the red candle broke the low of ATR break out candle
-						if dt["low"][x] < low_of_ATR_Break or dt["low"][x-1] < low_of_ATR_Break :
-							print ('AVOID ---',symb, "One of the red candle broke low of initial breakout Green! ")
-					break
 
 		# if symb =='ORCHPHARMA-BE':
 		# 	time.sleep(5)

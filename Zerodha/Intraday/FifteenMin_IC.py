@@ -25,9 +25,17 @@ print("Starting", kite.margins(), "loggid in")
 print ("Logged in... sleeping for {} mins...".format(sleepTime), datetime.datetime.now())
 # time.sleep(sleepTime*60)
 
-doM = 18  		# Day of month 
+doM = 29  		# Day of month 
 mon = 12 		# Month
 yr  = 2023		# Year 
+
+# number of candles to look inside the first candle 
+numOfCandles = 5 # number of inside candles to be checked
+
+# Fibonacci retracement value for filtering proper stocks
+febRet = .62
+
+patternFound = 0   # pattern found in #stocks
 
 # Capital to be deployed per stock
 iniCap = 2000   # placing order for 5 stocks
@@ -51,14 +59,6 @@ filtered_scan1 = [];
 
 # Stocks to sell
 filtered_scan2 = []
-
-# number of candles to look inside the first candle 
-numOfCandles = 5 # number of inside candles to be checked
-
-# Fibonacci retracement value for filtering proper stocks
-febRet = .62
-
-patternFound = 0   # pattern found in #stocks
 
 # Lopping through the list of FNO stocks (having high volumes)
 for k in range(0,len(stk)):
@@ -136,8 +136,8 @@ print ("\nStock for sell   candleSizePct, Stock, Entry, Stoploss, fibPct, target
 print ("\nStocks for Sell",len(filtered_scan2), filtered_scan2)
 print ("\nStocks to Buy",len(filtered_scan1), filtered_scan1)
 
-b = [s[1] for s in filtered_scan2[:2]]
-s = [s[1] for s in filtered_scan1[:3]]
+b = [s[1] for s in filtered_scan1[:3]]
+s = [s[1] for s in filtered_scan2[:2]]
 patternIn = b+s 
 
 finalStocks = filtered_scan1[:2] + filtered_scan2[:3]
@@ -216,35 +216,33 @@ def entrySellOrder (tsb, entry_price, sl, target):
 			tag="TradeViaPython")
 	return (order)
 
-actualRun = "Yes"
+actualRun = "Yesa"
 maxBuy = 0
 maxSell = 0
 if actualRun == "Yes":
-	actualRun = 'Done'
 	hrOfDay = int(str(datetime.datetime.now().time())[:2])
 	minOfDay = int(str(datetime.datetime.now().time())[3:5])
-	print ('\nplacing buying orders',hrOfDay,minOfDay)
 	# if hrOfDay > 12 :
 	# 	break
 	for stk_no in range(0,len(filtered_scan1)):
-		print ("\n",stk_no)
 		tsb = filtered_scan1[stk_no][1]
 		entry_price = round((filtered_scan1[stk_no][2] + filtered_scan1[stk_no][2]*0.0001),1)
 		sl = round(filtered_scan1[stk_no][3] - filtered_scan1[stk_no][2]*0.0005,1)
 		target = round((filtered_scan1[stk_no][2] + filtered_scan1[stk_no][2]*tgPct),1)
-		print (tsb)
-		print (entry_price)
-		print (sl)
-		print (target)
-		# maxBuy+=1
-		# if maxBuy <4:
-		# 	eb = entryBuyOrder (tsb, entry_price, sl, target)
+		ods_v1 = pd.DataFrame(kite.orders()) 	
+
 		try:
+			# No orders has been placed yet with below condition true
+			if len(ods_v1) < 1: 
+				print (tsb,'placing first buying order at', datetime.datetime.now().time())
+				maxBuy+=1
+				eb = entryBuyOrder (tsb, entry_price, sl, target)
+
 			checkOrder = len(ods_v1[(ods_v1["tradingsymbol"]==tsb) & (ods_v1["price"]==entry_price) & (ods_v1["status"]=="TRIGGER PENDING") & (ods_v1["product"]=="MIS") & (ods_v1["transaction_type"]=="BUY")])
-			print (checkOrder)
 			if checkOrder > 0:
 				print ("Buy order already placed for", tsb)
 			else:
+				print (tsb,'placing buying orders at', datetime.datetime.now().time())
 				maxBuy+=1
 				if maxBuy <4:
 					eb = entryBuyOrder (tsb, entry_price, sl, target)
@@ -253,6 +251,7 @@ if actualRun == "Yes":
 
 	# placing selling orders
 	for stk_no in range(0,len(filtered_scan2)):
+		ods_v1 = pd.DataFrame(kite.orders()) 	
 		try:
 			tsb = filtered_scan2[stk_no][1]
 			entry_price = round((filtered_scan2[stk_no][2] - filtered_scan2[stk_no][2]*0.0001),1)

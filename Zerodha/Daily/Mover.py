@@ -31,7 +31,7 @@ for k in range(0,len(stk)):
 	# getting historical data
 	instrument_token = stk["itkn"][k]    # DRREDDY 225537
 
-	to_datetime = datetime.datetime(2023, 11, 30, 18, 00, 00, 000000)
+	to_datetime = datetime.datetime(2024, 2, 1, 18, 00, 00, 000000)
 	from_datetime = to_datetime - datetime.timedelta(days=cDays)     # From last & days
 
 	interval = "day"

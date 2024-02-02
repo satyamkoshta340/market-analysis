@@ -1,3 +1,6 @@
+# -- Watch video 
+# https://www.youtube.com/watch?v=Wv0bGrSD8jI&ab_channel=TradeViaPython
+
 import os
 try:
     import requests

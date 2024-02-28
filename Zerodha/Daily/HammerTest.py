@@ -6,7 +6,7 @@ from kite_trade import *
 from dotenv import load_dotenv
 import time
 load_dotenv()
-
+# THis is the latest commit 2
 enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
 date_format = "%Y-%m-%d %H:%M:%S"

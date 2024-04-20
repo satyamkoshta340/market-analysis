@@ -50,7 +50,7 @@ while ATR_day > 1:
 	# 	if symb != 'NAHARINDUS':
 	# 		continue
 
-		to_datetime = datetime.datetime(2024, 1, 8, 20, 00, 00, 000000)
+		to_datetime = datetime.datetime(2024, 3, 31, 20, 00, 00, 000000)
 		from_datetime = to_datetime - datetime.timedelta(days=cDays)     # From last & days
 		interval = "day"
 

@@ -1,3 +1,5 @@
+# https://www.youtube.com/watch?v=VytCe70yybI&t=428s&ab_channel=TradeViaPython
+
 import os
 try:
     import requests
@@ -132,6 +134,7 @@ class KiteApp:
         for k in list(params.keys()):
             if params[k] is None:
                 del params[k]
+        print (params)
         order_id = self.session.post(f"{self.root_url}/orders/{variety}",
                                      data=params, headers=self.headers).json()["data"]["order_id"]
         return order_id
@@ -155,51 +158,87 @@ class KiteApp:
                                        headers=self.headers).json()["data"]["order_id"]
         return order_id
     
-    def place_gtt(self, exchange, tradingsymbol, trigger_values, last_price, orders, trigger_type):
-        params = {}
-        params["orders"] = orders
-        params["type"] = trigger_type
-        params["condition"] = {
-            "exchange": exchange,
-            "tradingsymbol": tradingsymbol,
-            "trigger_values": trigger_values,
-            "last_price": last_price
-        }
+    def gtts(self):
+        gtts_data = self.session.get(f"{self.root_url}/gtt/triggers",
+                                      headers={**self.headers, **{"X-Kite-Version": "3"}}).json()["data"]
+        return gtts_data
 
-        trigger_id = self.session.post(f"{self.root_url}/gtt/triggers", 
-                                    data = params, headers=self.headers).json()["data"]["trigger_id"]
+    def place_gtt(self, gtt_type, exchange, tradingsymbol, trigger_values, last_price, transaction_type, quantity, product, order_type, price_1=None, price_2=None
+                    ):
+
+        params = locals()
+        condition= { key: value for key, value in params.items() if key in ["exchange", "tradingsymbol", "trigger_values", "last_price"]}
+
+        orders= [
+        {
+            'exchange':exchange,
+            'tradingsymbol':tradingsymbol,
+            'transaction_type':transaction_type,
+            'quantity':quantity,
+            'order_type':order_type,
+            'product':product,
+            'price':price_1
+        },
+        {
+            'exchange':exchange,
+            'tradingsymbol':tradingsymbol,
+            'transaction_type':transaction_type,
+            'quantity':quantity,
+            'order_type':order_type,
+            'product':product,
+            'price':price_2
+        }]
+        print (condition,'\n', orders)
+        trigger_id = self.session.post(f"{self.root_url}/gtt/triggers",
+                                     data= {"type":gtt_type,"condition":condition, "orders":orders}, headers=self.headers).json()
         return trigger_id
-    """
-        orders = [{
-            "exchange" : exchange,
-            "tradingsymbol": tradingsymbol,
-            "transaction_type": transaction_type,
-            "quantity": quantity,
-            "order_type": order_type,
-            "product": product,
-            "price": price
-    }]"""
-    
-'''
-    def place_gtt(self, trigger_type, tradingsymbol, exchange, trigger_values, last_price, orders):
-    """
-    Place GTT order
-    - `trigger_type` The type of GTT order(single/two-leg).
-    - `tradingsymbol` Trading symbol of the instrument.
-    - `exchange` Name of the exchange.
-    - `trigger_values` Trigger values (json array).
-    - `last_price` Last price of the instrument at the time of order placement.
-    - `orders` JSON order array containing following fields
-        - `transaction_type` BUY or SELL
-        - `quantity` Quantity to transact
-        - `price` The min or max price to execute the order at (for LIMIT orders)
-    """
-    # Validations.
-    assert trigger_type in [self.GTT_TYPE_OCO, self.GTT_TYPE_SINGLE]
-    condition, gtt_orders = self._get_gtt_payload(trigger_type, tradingsymbol, exchange, trigger_values, last_price, orders)
-    return self._post("gtt.place", params={
-        "condition": json.dumps(condition),
-        "orders": json.dumps(gtt_orders),
-        "type": trigger_type})
 
-'''
+    def place_gtt_single(self, gtt_type, exchange, tradingsymbol, trigger_values, last_price, transaction_type, quantity, product, order_type, price=None):
+
+        # params = locals()
+        # condition= { key: value for key, value in params.items() if key in ["exchange", "tradingsymbol", "trigger_values", "last_price"]}
+        condition = {
+            'exchange':exchange,
+            'tradingsymbol':tradingsymbol,
+            'trigger_values':trigger_values,
+            'last_price':last_price
+        }
+        orders= [{'exchange':exchange,
+            'tradingsymbol':tradingsymbol,
+            'transaction_type':transaction_type,
+            'quantity':quantity,
+            'order_type':order_type,
+            'product':product,
+            'price':price}]
+        print (condition,'\n', orders)
+        trigger_id = self.session.post(f"{self.root_url}/gtt/triggers",
+                                     data= {"type":gtt_type,"condition":condition, "orders":orders}, headers={**self.headers, **{"X-Kite-Version": "3"}}).json()
+        return trigger_id
+
+    def modify_gtt(self, gtt_id, gtt_type, exchange, tradingsymbol, trigger_values, last_price, transaction_type, quantity, product, order_type, price=None):
+        
+        condition = {
+            'exchange':exchange,
+            'tradingsymbol':tradingsymbol,
+            'trigger_values':trigger_values,
+            'last_price':last_price
+        }
+        orders= [{'exchange':exchange,
+            'tradingsymbol':tradingsymbol,
+            'transaction_type':transaction_type,
+            'quantity':quantity,
+            'order_type':order_type,
+            'product':product,
+            'price':price}]
+
+        trigger_id = self.session.post(f"{self.root_url}/gtt/triggers/{gtt_id}",
+                                     data= {"type":gtt_type,"condition":condition, "orders":orders}, headers={**self.headers, **{"X-Kite-Version": "3"}}).json()
+        return trigger_id
+ # # Validations.
+ #    assert trigger_type in [self.GTT_TYPE_OCO, self.GTT_TYPE_SINGLE]
+ #    condition, gtt_orders = self._get_gtt_payload(trigger_type, tradingsymbol, exchange, trigger_values, last_price, orders)
+ #    return self._post("gtt.place", params={
+ #        "condition": json.dumps(condition),
+ #        "orders": json.dumps(gtt_orders),
+ #        "type": trigger_type})
+

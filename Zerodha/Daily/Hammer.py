@@ -1,6 +1,7 @@
 ## =================================================================================================================== ##
 # 									getting stocks hammer pattern
 ## =================================================================================================================== ##
+print ("- - - - - - - - - - - - - - Looking for a hammer pattern on a daily chart - - - - - - - - - - - - - ") 
 from kite_trade import *
 import pandas as pd
 import time
@@ -17,7 +18,26 @@ kite = KiteApp(enctoken=enctoken)
 # Get Historical Data
 import datetime
 dir_path = os.path.dirname(os.path.realpath(__file__))
-print (dir_path)
+# print (dir_path)
+
+# Code running time 
+current_datetime = datetime.datetime.now()
+print ("Code executed at:", current_datetime)
+
+# By default use current day's data 
+use_current_date = 'Yesa'
+
+if use_current_date == 'Yes':
+	yr = current_datetime.year
+	mon = current_datetime.month
+	doM = current_datetime.day
+	print ("Running for {}-{}-{} date\n".format(yr,mon,doM))
+else:
+	yr = 2024
+	mon = 4
+	doM = 18
+	print ("Running for {}-{}-{} date\n".format(yr,mon,doM))
+
 # check movement within days
 cDays = 34
 stk = pd.read_csv( dir_path+ "/nse_stocks.csv")  	# All NSE stocks
@@ -32,7 +52,7 @@ for k in range(0,len(stk)):
 	# getting historical data
 	instrument_token = stk["itkn"][k]    # DRREDDY 225537
 
-	to_datetime = datetime.datetime(2024, 1, 24, 18, 00, 00, 000000)
+	to_datetime = datetime.datetime(yr, mon, doM, 18, 00, 00, 000000)
 	from_datetime = to_datetime - datetime.timedelta(days=cDays)     # From last & days
 
 	# if stk["EQ"][k] != 'FIBERWEB' :
@@ -42,10 +62,11 @@ for k in range(0,len(stk)):
 	try:
 		nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
 		dt = pd.DataFrame(nd)
+		# print (dt.head())
 	except:
 		continue
 	if len(dt) <20:
-		print ("Error fetching data for", stk["EQ"][k])
+		# print ("Error fetching data for", stk["EQ"][k])
 		continue
 	if dt["volume"][0] < 5000:
 		continue
@@ -54,12 +75,10 @@ for k in range(0,len(stk)):
 	lst = len(dt)-1
 	simple_hammer = 0
 
-	high_in_past_20D = max(dt['high'][lst-60:lst])
+	high_in_past_10D = max(dt['high'][lst-14:lst])
 	low_in_past_5D = min(dt['low'][lst-8:lst])
-	pctAway_from_high_past20D = round((high_in_past_20D - dt["close"][lst])/dt["close"][lst]*100,2)
-
-	# if stk["EQ"][k]=='INFY':
-	# 	print (dt)
+	hammers_low = dt["low"][lst]
+	pctAway_from_high_past10D = round((high_in_past_10D - hammers_low)/hammers_low*100,2)
 
 	try:
 		lastClose =  dt['close'][lst]
@@ -70,36 +89,33 @@ for k in range(0,len(stk)):
 		pct_away_from_high = round(100*(dt['high'][lst] - dt['close'][lst])/dt['close'][lst],2)
 
 		move_during_day = round(100*(dt['high'][lst] - dt['low'][lst])/dt['low'][lst],2)
-		times_lowerWk_grt_thn_upperWk = round(lower_wick/upper_wick,2)
+		times_lowerWk_grt_thn_upperWk = round(lower_wick/(upper_wick+0.01),2)
 
 		# simple conditions 
-		if lower_wick > 3*body_of_candle and lower_wick > upper_wick:
-		# Hammer appeared after at least 10% decay from high in previous 20 trading days
-			if pctAway_from_high_past20D >= 10 and low_in_past_5D >=  dt['low'][lst]:
-				print ("========================  Hammer after 10% decay from high  ====================")
-				print ("%away from past 20 day high", pctAway_from_high_past20D, ', low in past 5 day', low_in_past_5D, ', todays low', dt['low'][lst])
+		if lower_wick > 2.2*body_of_candle and lower_wick > 1.5*upper_wick:
+			print ('=== Simple',stk["EQ"][k], "lastClose:", lastClose, ', body times wick',body_times_lower_wick)
+		# Hammer appeared after at least 7% decay from high in previous 20 trading days
+			if pctAway_from_high_past10D >= 7 and low_in_past_5D >=  dt['low'][lst]:
+				print ("========================  Hammer after > 7% decay from high  ====================")
+				print ("%away from past 10 day high", pctAway_from_high_past10D, ', low in past 5 day', low_in_past_5D, ', todays low', dt['low'][lst])
 				print ('***',stk["EQ"][k], "lastClose:", lastClose, ', body times wick',body_times_lower_wick,\
 					', pct_away_from_high',pct_away_from_high,', move_during_day',move_during_day,\
 					', times_lowerWk_grt_thn_upperWk', times_lowerWk_grt_thn_upperWk)
-				time.sleep(3)
+				# time.sleep(3)
 				best_hammer.append((stk["EQ"][k], dt['close'][lst],body_times_lower_wick, pct_away_from_high,move_during_day))
 			else:
 				simple_hammer+=1
-
-
 	except:
 		continue
  
 sorted_by_body_times_wick = sorted (best_hammer, key = lambda x:x[2])
 print ("\nStocks to Buy",len(sorted_by_body_times_wick), sorted_by_body_times_wick)
 
-
-
 # Back testing code to be written with following conditions 
 
 # 1. Write back testing for one day first
 # 2. Get all the stocks using the above code for entries
-# 3. Entry (next day) will be between closing and high of the signal day 
+# 3. Entry (next day) will be between (closing -0.4% of last close) and (high made +0.4% of last close) on the signal day 
 # 4. SL will be low of the hammer candle (signal day)
 # 5. Target will be two times of the SL. 
 	# For example entry was made at 35 for a stock and hammer's low is 34.5 (SL) then target would be 36 (2x0.5)

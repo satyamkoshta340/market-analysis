@@ -4239,3 +4239,17 @@ ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,
 2024-01-20,2024-01-25,KHAICHEM,90.5,1568325,1453006,-1.82,-3.7,30.67,25.47,22.79
 ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,return_in_two_days,pctRange_30_days,pctRange_20_days,pctRange_10_days
 2024-01-24,2024-01-30,LPDC,10.05,307105,347290,-1.0,-1.99,47.22,47.22,37.66
+ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,return_in_two_days,pctRange_30_days,pctRange_20_days,pctRange_10_days
+2024-02-16,2024-02-21,CENTENKA,448.75,31659,53404,-0.99,0.41,20.0,14.29,7.83
+2024-02-16,2024-02-21,DATAPATTNS,2060.45,274446,318591,8.67,14.64,17.08,17.08,12.46
+ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,return_in_two_days,pctRange_30_days,pctRange_20_days,pctRange_10_days
+2024-03-27,2024-04-02,PROPEQUITY-SM,293.0,12000,12642,1.83,2.39,57.07,45.03,32.86
+ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,return_in_two_days,pctRange_30_days,pctRange_20_days,pctRange_10_days
+2024-03-28,2024-04-03,WEIZMANIND,116.2,51499,35698,0.22,11.06,40.41,30.7,23.04
+ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,return_in_two_days,pctRange_30_days,pctRange_20_days,pctRange_10_days
+2024-03-28,2024-04-03,WEIZMANIND,116.2,51499,35698,0.22,11.06,40.41,30.7,23.04
+ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,return_in_two_days,pctRange_30_days,pctRange_20_days,pctRange_10_days
+2024-03-28,2024-04-03,WEIZMANIND,116.2,51499,35698,0.22,11.06,40.41,30.7,23.04
+ATR_Break_Date,SignalDate,Stock,Closing Price,volume,21_EMA_Vol,return_in_a_day,return_in_two_days,pctRange_30_days,pctRange_20_days,pctRange_10_days
+2024-04-09,2024-04-15,PREMEXPLN,1918.85,187888,129463,2.02,5.26,32.57,32.57,19.86
+2024-04-09,2024-04-15,RAMRAT,294.7,47745,38338,11.94,15.64,21.37,17.09,13.83

@@ -1,3 +1,5 @@
+# /* Press ctrl + fn + Insert to cancel *///
+
 # Fetching important libraries
 from kite_trade import *
 import pandas as pd
@@ -11,12 +13,33 @@ load_dotenv()
 # Providing enc_token to login to zerodha portal
 enctoken = os.environ.get("ENC_TOKEN")
 kite = KiteApp(enctoken=enctoken)
-# print("Starting", kite.positions())
+# print("Positions", kite.positions())
+# print("Starting", kite.margins(), "\nloggid in")
+
 # Capital to be deployed per stock
 
 # Getting path of the current directory, this helps when collaborating on git
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print (dir_path)
+
+# Code running time 
+current_datetime = datetime.datetime.now()
+
+print ("Code executed at:", current_datetime)
+
+# By default use current day's data 
+use_current_date = 'Yes'
+
+if use_current_date == 'Yes':
+	yr = current_datetime.year
+	mon = current_datetime.month
+	doM = current_datetime.day
+	print ("Running for {}-{}-{} date\n".format(yr,mon,doM))
+else:
+	yr = 2024
+	mon = 4
+	doM = 16
+	print ("Running for {}-{}-{} date\n".format(yr,mon,doM))
 
 # This is the number for which historical data of a stock will be fetched
 cDays = 140
@@ -53,14 +76,14 @@ while ATR_day > 1:
 		# else:
 		# 	print(k)
 
-		to_datetime = datetime.datetime(2024, 2, 1, 20, 00, 00, 000000)
+		to_datetime = datetime.datetime(yr, mon, doM, 20, 00, 00, 000000)
 		from_datetime = to_datetime - datetime.timedelta(days=cDays)     # From last & days
 		interval = "day"
 
 		try:
 			nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
 			dt = pd.DataFrame(nd)
-			# print (symb, len(dt))
+			# print (symb, len(dt), dt)
 		except:
 			# print (symb,"Not able to fetch data") 
 			continue

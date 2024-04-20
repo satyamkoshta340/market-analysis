@@ -1,5 +1,5 @@
 ## =================================================================================================================== ##
-# 									getting stocks with 30% return within 10 days
+print("									Looking for stocks with 30+% return within 10 days or less                             ")
 ## =================================================================================================================== ##
 from kite_trade import *
 import pandas as pd
@@ -18,11 +18,26 @@ kite = KiteApp(enctoken=enctoken)
 import datetime
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print (dir_path)
+# By default use current day's data 
+use_current_date = 'Yes'
+
+if use_current_date == 'Yesa':
+	yr = current_datetime.year
+	mon = current_datetime.month
+	doM = current_datetime.day
+	print ("Running for {}-{}-{} date\n".format(yr,mon,doM))
+else:
+	yr = 2024
+	mon = 4
+	doM = 16
+	print ("Running for {}-{}-{} date\n".format(yr,mon,doM))
+
 # check movement within days
 cDays = 10
-stk = pd.read_csv( dir_path+ "/nse_stocks.csv")
 
+stk = pd.read_csv( dir_path+ "/nse_stocks.csv")
 # stk = pd.read_csv( dir_path+ "/All_stocks.csv")
+
 scanned = []
 filtered_scan1 = []; filtered_scan2 = []
 # Lopping through the list of FNO stocks (having high volumes)
@@ -31,14 +46,18 @@ for k in range(0,len(stk)):
 	# getting historical data
 	instrument_token = stk["itkn"][k]    # DRREDDY 225537
 
-	to_datetime = datetime.datetime(2024, 2, 1, 18, 00, 00, 000000)
+	to_datetime = datetime.datetime(yr, mon, doM, 18, 00, 00, 000000)
 	from_datetime = to_datetime - datetime.timedelta(days=cDays)     # From last & days
-
+	is_data_available = True
 	interval = "day"
 	try:
 		nd = kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=False)
 		dt = pd.DataFrame(nd)
+		if is_data_available is True:
+			print (dt.head(3))
+			is_data_available = False # Need to print data just one time
 	except:
+		print ("Error fetching data for", stk["EQ"][k])
 		continue
 
 	if len(dt) <2:

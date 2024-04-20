@@ -25,9 +25,9 @@ print("Starting", kite.margins(), "loggid in")
 print ("Logged in... sleeping for {} mins...".format(sleepTime), datetime.datetime.now())
 # time.sleep(sleepTime*60)
 
-doM = 29  		# Day of month 
-mon = 12 		# Month
-yr  = 2023		# Year 
+doM = 19  		# Day of month 
+mon = 2 		# Month
+yr  = 2024		# Year 
 
 # number of candles to look inside the first candle 
 numOfCandles = 5 # number of inside candles to be checked
@@ -216,7 +216,7 @@ def entrySellOrder (tsb, entry_price, sl, target):
 			tag="TradeViaPython")
 	return (order)
 
-actualRun = "Yesa"
+actualRun = "Yes"
 maxBuy = 0
 maxSell = 0
 if actualRun == "Yes":
@@ -258,6 +258,7 @@ if actualRun == "Yes":
 			sl = round(filtered_scan2[stk_no][3] + filtered_scan1[stk_no][2]*0.0005,1)
 			target = round((filtered_scan2[stk_no][2] - filtered_scan2[stk_no][2]*tgPct),1)
 			checkOrder = len(ods_v1[(ods_v1["tradingsymbol"]==tsb) & (ods_v1["price"]==entry_price) & (ods_v1["status"]=="TRIGGER PENDING") & (ods_v1["product"]=="MIS") & (ods_v1["transaction_type"]=="SELL")])
+			print (tsb, entry_price, sl, target)
 			if checkOrder > 0:
 				print ("Sell order already placed for", tsb)
 			else:

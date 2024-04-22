@@ -10,21 +10,28 @@ checking for break of five_min_high and five_min_low
 target points: 100
 sl points: 70
 reverse trade is enabled before 10:00
+trailing stoploss enabled
 termiate the trade forcefully after 11:00
 """
 
 import pandas as pd
 import datetime as dt
-import sys, os
+import sys
+import os
+from pathlib import Path
 
-from Scripts.AnalysisReport import *
+# Add the root directory to the sys.path temporarily
+root_dir = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root_dir))
+
+from scripts.AnalysisReport import *
 
 # need to provide 5 min datasets as dp 
 
 
 def analysisOf920(dp):
     signal_time = "09:15"
-    max_market_time = "11:00"
+    max_market_time = "15:15"
     reverse_trade_max_entry_time = "10:00"
     n = len(dp)
     i = 0
@@ -32,7 +39,8 @@ def analysisOf920(dp):
         "Date": [],
         "Trade": [],    # call | put
         "Strategy": [], # 9:20 | reverse
-        "Gain": []
+        "Gain": [],
+        "T_Gain": []
         }
     
     while( i < n ):
@@ -42,8 +50,11 @@ def analysisOf920(dp):
         entry = 0
         sl = 0
         target = 0
+        trail_gain = 0
         in_trade = False
         can_reverse = True
+        can_trail = True
+        prev_target = 0
         i +=  1
         strategy = "09:20"
         g = 0
@@ -54,12 +65,14 @@ def analysisOf920(dp):
                 entry = five_minute_high
                 sl = five_minute_high - 70
                 target = five_minute_high + 100
+                prev_target = five_minute_high
                 in_trade = "call"
                 trade = "call"
                 # print("Started a CALL trade at ", dp["Time"][i], " on ", dp["Time"][i])
             elif not in_trade and dp["Close"][i] < five_minute_low :
                 # found a put
                 entry = five_minute_low
+                prev_target = five_minute_low
                 sl = five_minute_low + 70
                 target = five_minute_low - 100
                 in_trade = "put"
@@ -77,6 +90,12 @@ def analysisOf920(dp):
                             # profit booked
                             g += 100
                             in_trade = "terminated"
+                            if( can_trail ):
+                                in_trade = "trail_call"
+                                prev_target = dp["High"][i]
+                                sl = dp["High"][i] - dp["High"][i]*0.0034
+                                target = dp["High"][i] + 2000
+
     
                         elif( dp["Low"][i] <= sl):
                             # loss booked in call
@@ -90,6 +109,11 @@ def analysisOf920(dp):
                         if( dp["Low"][i] <= target ):
                             g += 100
                             in_trade = "terminated"
+                            if( can_trail ):
+                                in_trade = "trail_put"
+                                prev_target = dp["Low"][i]
+                                sl = dp["Low"][i] + dp["Low"][i]*0.0034
+                                target = dp["Low"][i] - 3000
                             
                         elif dp["High"][i] >= sl:
                             g += -70
@@ -114,6 +138,22 @@ def analysisOf920(dp):
                             entry = five_minute_high
                             target = five_minute_high + 100
                             sl = five_minute_high - 70
+                    elif in_trade == "trail_call":
+                        if( dp["High"][i] > prev_target ):
+                            prev_target = dp["High"][i]
+                            sl = dp["High"][i] - dp["High"][i]*0.0034
+                        elif dp["Low"][i] < sl:
+                            in_trade = "terminated"
+                            trail_gain += dp["Low"][i] - entry
+                            can_trail = False
+                    elif in_trade == "trail_put":
+                        if( dp["Low"][i] < prev_target ):
+                            prev_target = dp["Low"][i]
+                            sl = dp["Low"][i] + dp["Low"][i]*0.0034
+                        elif dp["High"][i] > sl:
+                            in_trade = "terminated"
+                            trail_gain += entry - dp["High"][i]
+                            can_trail = False
                     else:
                         pass
                     i+=1
@@ -123,17 +163,18 @@ def analysisOf920(dp):
         result["Strategy"].append(strategy)
         result["Trade"].append(trade)
         result["Gain"].append(g)
+        result["T_Gain"].append(trail_gain)
     return result
 
 def main():
-    print (os.getcwd())
+    print(sys.path)
     try:
-        dp = pd.read_csv( os.getcwd()+"/strategies/assets/BANK_NIFTY_5_MIN_2015.csv")
+        dp = pd.read_csv( os.getcwd() +"/market-analysis/strategies/assets/BANK_NIFTY_5_MIN_2020.csv")
     except:
-        dp = pd.read_csv( os.getcwd()+"\\assets\\BANK_NIFTY_5_MIN_2016.csv")
-
+        dp = pd.read_csv( os.getcwd() +"\\assets\\BANK_NIFTY_5_MIN_2020.csv")
     result = analysisOf920(dp)
     result = pd.DataFrame(result)
     getAnalysisReport(result)
+    print("Trail Gain: ",sum(result["T_Gain"]))
 
 main()

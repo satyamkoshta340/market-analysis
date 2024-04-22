@@ -16,8 +16,13 @@ termiate the trade forcefully after 11:00
 import pandas as pd
 import datetime as dt
 import sys, os
+from pathlib import Path
 
-from Scripts.globalTest import *
+# Add the root directory to the sys.path temporarily
+root_dir = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root_dir))
+
+from scripts.globalTest import *
 
 # need to provide 5 min datasets as dp 
 
@@ -213,7 +218,7 @@ def main():
     })
     for i in range(2015, 2021):
         try:
-            dp = pd.read_csv( os.getcwd()+"/strategies/assets/BANK_NIFTY_5_MIN_{year}.csv".format(year = i))
+            dp = pd.read_csv( os.getcwd()+"/market-analysis/assets/BANK_NIFTY_5_MIN_{year}.csv".format(year = i))
         except:
             dp = pd.read_csv( os.getcwd()+"\\market-analysis\\strategies\\assets\\BANK_NIFTY_5_MIN_{year}.csv".format(year = i))
 

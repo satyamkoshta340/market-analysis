@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
-import os
 
 def download_index_data(index_name: str, candle_size: str = "1d", period: str = "1mo"):
     """
